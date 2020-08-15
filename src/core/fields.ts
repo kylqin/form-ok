@@ -1,5 +1,5 @@
 import * as _ from 'lodash'
-import { FieldExtT, PlainObject, FieldPropsT, EnumItemT } from './types'
+import { FieldExtT, PlainObject, FieldPropsT, EnumItemT, FieldDefineT } from './types'
 import { genID, notNull } from './utils'
 
 const genKey = () => genID('__key_')
@@ -114,4 +114,98 @@ export function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT)
   commonProps.cachedFieldProps[field.key] = copied
 
   return copied as FieldPropsT
+}
+
+/** 是否为 无标题组 */
+export function isGroupWithoutTitle (field: FieldExtT) { return field.widget === 'group' && !field.title }
+
+/** 将 无标题组 的 field 压扁; 并设置 field 的 group/parent 属性 */
+/** 每个 field 都返回 副本 copied */
+function flattenNoTitleGroups (fields: FieldDefineT[], parent?: FieldDefineT): FieldDefineT[] {
+  let copiedFields: FieldDefineT[] = []
+
+  fields.forEach(field => {
+    const copied = new FieldDefineT(field)
+    if (isGroupWithoutTitle(field)) {
+      // 是 无标题组
+      // copied is an group without title
+
+      // 标记是否已经标准化: 在 normalizeFields 中使用, 因为 无标题组，在其中会被多次访问到，此标记第一次访问后 设置为 true
+      (copied as any).__ok_keyIsNormalized = false
+
+      const properties = flattenNoTitleGroups(copied.properties || [], parent)
+
+      // 设置 properties 的 group 属性
+      properties.forEach(subField => {
+        subField.group = copied
+      })
+
+      // 需要 "压扁"
+      copiedFields = copiedFields.concat(properties)
+    } else if (field.widget === 'group' || field.widget === 'box' || field.widget === 'object' || field.widget === 'array') {
+      // 是 容器
+      copied.properties = flattenNoTitleGroups(field.properties || [], copied)
+      copiedFields.push(copied)
+    } else {
+      // 普通 field
+      copiedFields.push(copied)
+    }
+  })
+
+
+  return copiedFields
+}
+
+/** 标准化 field 的 key 属性，使之在整棵 fields 树中 唯一，即: 对象属性(parent.key), 数组属性(array[].key)*/
+/** 设置 originKey, compute, 建立 树结构关系, group/parent */
+export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
+  const resultFields: FieldExtT[] = []
+
+  const walk = (fields: FieldDefineT[], parent?: FieldExtT) => {
+    fields.forEach(field => {
+      // 直接在 field 上修改， 因为 flattenNotTitleGroups 返回的是副本
+
+      field.originKey = field.key || genKey() // 自动生成 key, 并保存至 originKey
+      field.key = field.originKey // 同步自动生成的 key
+      if (field.labelKey) { field.originLabelKey = field.labelKey }
+
+      const parentIsArr = parent && parent.widget === 'array'
+
+      if (parentIsArr || (parent && parent.widget === 'object')) {
+        // 父亲 widget 为 数组或对象, 处理 key, labelKey, group.key, group.labelKey, 设置 origin{key, labelKey}
+        const jointer = parentIsArr ? '[].' : '.'
+
+        field.key = parent!.key + jointer + field.key
+        if (field.labelKey) { field.labelKey = parent!.key + jointer + field.labelKey }
+
+        if (field.group && isGroupWithoutTitle(field.group)) {
+          // 无标题组 也要处理
+          if (!(field.group as any).__ok_keyIsNormalized) {
+            // 避免重复处理
+            field.group.originKey = field.group.key || genKey()
+            field.group.key = field.group.originKey
+
+            field.group.key = parent!.key + jointer + field.group.key
+            ;(field.group as any).__ok_keyIsNormalized = true
+          }
+        }
+
+        if (field.widget === 'object' || field.widget === 'array') {
+          // 递归
+          walk(field.properties || [], field)
+        }
+
+        if (field.widget === 'box' || field.widget === 'group') {
+          // box/group 不贡献 key， 递归
+          walk(field.properties || [], parent)
+        }
+      }
+
+      return field
+    })
+  }
+
+  walk(flattenNoTitleGroups(fields))
+
+  return fields
 }

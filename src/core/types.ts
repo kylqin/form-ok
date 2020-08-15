@@ -53,8 +53,11 @@ export type OnChangeCallbackT = (value: any, text: string, dsPack: any) => void
 
 export class FieldExtT extends FieldT {
   public originKey: string
+  public originLabelKey?: string
   public group?: FieldExtT
   public parent?: FieldExtT
+
+  public properties?: FieldExtT[]
 
   public onChange?: OnChangeCallbackT
   public onBlur?: Function
@@ -75,4 +78,7 @@ export class FieldExtT extends FieldT {
 // }
 export class FieldPropsT extends FieldExtT {
   public text: string = ''
+}
+
+export class FieldDefineT extends FieldExtT {
 }

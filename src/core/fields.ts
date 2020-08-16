@@ -1,5 +1,5 @@
 import * as _ from 'lodash'
-import { FieldExtT, PlainObject, FieldPropsT, EnumItemT, FieldDefineT } from './types'
+import { FieldExtT, PlainObject, FieldPropsT, FieldDefineT, createFieldExt } from './types'
 import { genID, notNull } from './utils'
 
 const genKey = () => genID('__key_')
@@ -105,6 +105,7 @@ export function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT)
 
   // 同步 required, _.remove 会 删除掉 validators 中的 ’required'
   copied.required = _.remove(copied.validators, v => v === 'required').length > 0 || copied.required
+  copied.required && copied.validators.unshift('required') // 如果， required === true, 加回 'required'
 
   // 标准化 enums: 过滤掉 null / undefined 值
   copied.enums = (copied.enums || []) // TODO: 如果 数组很大会影响性能
@@ -125,7 +126,7 @@ function flattenNoTitleGroups (fields: FieldDefineT[], parent?: FieldDefineT): F
   let copiedFields: FieldDefineT[] = []
 
   fields.forEach(field => {
-    const copied = new FieldDefineT(field)
+    const copied = createFieldExt(field)
     if (isGroupWithoutTitle(field)) {
       // 是 无标题组
       // copied is an group without title

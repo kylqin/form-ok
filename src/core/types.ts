@@ -1,13 +1,9 @@
+import { FokValidatorDefineT } from './validation'
+
 export class ErrorT {
   constructor(public message: string) {}
 }
 
-export type ValidateResult = {
-  valid: boolean,
-  message?: string
-}
-
-export type ValidatorT = (value: any) => ValidateResult
 
 export type PlainObject = {
   [prop: string]: any
@@ -32,7 +28,7 @@ export class FieldT {
     public value?: any,
     public errors: ErrorT[] = [],
     public required?: boolean,
-    public validators: (string|ValidatorT)[] = [],
+    public validators: FokValidatorDefineT[] = [],
 
     public type: FieldTypeT = 'string',
     public enums?: EnumItemT[],
@@ -47,6 +43,22 @@ export class FieldT {
 
 export function createField ({ key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties }: { [key: string]: any }) {
   return new FieldT(key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
+}
+
+export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
+  const { key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, ...restProps } = fieldDefine
+  const extField = new FieldExtT(key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
+  const restPropNames = Object.keys(restProps)
+
+  // 设置 compute
+  extField.compute = restPropNames.reduce((acc: PlainObject, propName) => {
+    if (propName.startsWith('c:')) {
+      acc[propName.slice(0, propName.length - 3)] = restProps[propName]
+    }
+    return acc
+  }, {})
+
+  return extField
 }
 
 export type OnChangeCallbackT = (value: any, text: string, dsPack: any) => void
@@ -80,5 +92,6 @@ export class FieldPropsT extends FieldExtT {
   public text: string = ''
 }
 
-export class FieldDefineT extends FieldExtT {
+export interface FieldDefineT extends FieldExtT {
+  [key: string]: any
 }

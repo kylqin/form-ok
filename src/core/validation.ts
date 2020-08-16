@@ -12,34 +12,29 @@ export type AsyncValidatorDeifneT = {
   exec: AsyncValidatorT
 }
 
-export type MultiValidatorT = (...values: any[]) => FokValidateResult
-export type AsyncMultiValidatorT = [string[], (...values: any[]) => Promise<FokValidateResult>]
-export type AsyncMultiValidatorDeifneT = {
-  type: 'async'
-  exec: AsyncMultiValidatorT
-}
+export type MultiValidatorT = [string[], (...values: any[]) => FokValidateResult, string?]
+export type AsyncMultiValidatorT = [string[], (...values: any[]) => Promise<FokValidateResult>, 'async']
 
 export type FokValidatorDefineT = (string|FokValidatorT|AsyncValidatorDeifneT)
-export type MultiValidatorDefineT = (MultiValidatorT|AsyncMultiValidatorDeifneT)
-
+export type MultiValidatorDefineT = (MultiValidatorT|AsyncMultiValidatorT)
 
 // type PenddingAsyncValidatorT = { fieldKey: string, exec: AsyncValidatorT }
 
 /** Async Validation */
-const AsyncValidators = {
-  current: [],
-  clear: () => { AsyncValidators.current = [] },
-  add: (asyncValidator: AsyncValidatorT, fieldKey: string) => {
-    // 替换重复的 fieldKey
-    _.remove(AsyncValidators.current, v => v.fieldKey === fieldKey)
-    AsyncValidators.current.push({ fieldKey, exec: asyncValidator })
-  },
-  validate: () => {
-    const current = AsyncValidators.current
-    AsyncValidators.clear()
-    return Promise.all(current.map(v => v.exec()))
-  }
-}
+// const AsyncValidators = {
+//   current: [],
+//   clear: () => { AsyncValidators.current = [] },
+//   add: (asyncValidator: AsyncValidatorT, fieldKey: string) => {
+//     // 替换重复的 fieldKey
+//     _.remove(AsyncValidators.current, v => v.fieldKey === fieldKey)
+//     AsyncValidators.current.push({ fieldKey, exec: asyncValidator })
+//   },
+//   validate: () => {
+//     const current = AsyncValidators.current
+//     AsyncValidators.clear()
+//     return Promise.all(current.map(v => v.exec()))
+//   }
+// }
 
 export type ValidateOptions = {
   ignoreRequired: boolean,
@@ -114,24 +109,22 @@ export function validateField (validators: FokValidatorDefineT[], value: any, ke
 }
 
 /** Validate multiple Fields */
-export function validateFields (validators: MultiValidatorDefineT[], values: [], keys: string[], validateOptions: ValidateOptions = defaultValidateOptions): Promise<string> {
+export function validateFields (validators: MultiValidatorDefineT[], values: [], validateOptions: ValidateOptions = defaultValidateOptions): Promise<string> {
   return new Promise((reslove, reject) => {
     let message: string = ''
     let asyncValidators = []
-    for (const validator of validators) {
-      if (typeof validator === 'object') {
-        if (validator.type === 'async') {
-          // 异步验证
-          asyncValidators.push(validator)
-        }
+    for (const validatorDefine of validators) {
+      const [keys, validator, type] = validatorDefine
+      if (type === 'async') {
+        // 异步验证
+        asyncValidators.push(validator)
       }
 
-      if (typeof validator === 'function') {
-        const vr = (validator as MultiValidatorT)(...values)
-        if (!vr.valid) {
-          message = vr.message!
-          break
-        }
+      // 同步验证
+      const vr = validator(...values) as FokValidateResult
+      if (!vr.valid) {
+        message = vr.message!
+        break
       }
     } // end of for
 
@@ -142,7 +135,7 @@ export function validateFields (validators: MultiValidatorDefineT[], values: [],
       // 同步验证通过
       if (asyncValidators.length) {
         // 有则执行异步验证
-        return Promise.all(asyncValidators.map(v => v.exec(...values)))
+        return Promise.all(asyncValidators.map(v => v(...values)))
           .then(vrs => {
             message = vrs.map(vr => vr.valid ? '' : vr.message).join(';')
             return message ? Promise.reject(message) : Promise.resolve('')

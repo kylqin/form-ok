@@ -4,10 +4,16 @@ import { createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
 import { isPlain } from './utils';
 import { MultiValidatorDefineT } from './validation';
 
+export type WatcherDefineT = [string[], (...values: any[]) => void]
+
+type FieldMap = Map<string, FieldExtT>
+type ValidatorsMap = Map<string, MultiValidatorDefineT[]>
+type WatchersMap = Map<string, WatcherDefineT[]>
+
 type FormGroupSchema = {
   fields?: FieldDefineT[],
   validators?: MultiValidatorDefineT[],
-  watch?: any[],
+  watch?: WatcherDefineT[],
 }
 
 export function createFormGroup(
@@ -19,20 +25,23 @@ export function createFormGroup(
 
 export class FormGroup {
   private __fieldSchema: FieldExtT[]
-  private __flattenedFields: Map<string, FieldExtT>
+  private __fieldMap: FieldMap
   private __dataSet: PlainObject
-  private __errSet: PlainObject
-  private __allow: PlainObject
+  private __errSet: PlainObject = {}
+  private __allow: PlainObject = {}
 
+  private __validatorsMap: ValidatorsMap
+  private __watchersMap: WatchersMap
 
   constructor (fields: FieldDefineT[] = [], private validators: MultiValidatorDefineT[] = [], private watch: any[] = [], initalData: PlainObject) {
-    // [this.__fieldSchema, this.__flattenedFields] = uitlCreateNormalizedFieldsWithFlattenedMap(fields)
+    [this.__fieldSchema, this.__fieldMap] = uitlCreateNormalizedFieldsWithFlattenedMap(fields)
+    this.__validatorsMap = utilCreateValidatorsMap(this.validators)
+    this.__watchersMap = utilCreateWatchersMap(this.watch)
     this.__dataSet = initalData
-    this.updateFieldSchema(fields)
   }
 
   updateFieldSchema (fields: FieldDefineT[]) {
-    [this.__fieldSchema, this.__flattenedFields] = uitlCreateNormalizedFieldsWithFlattenedMap(fields)
+    [this.__fieldSchema, this.__fieldMap] = uitlCreateNormalizedFieldsWithFlattenedMap(fields)
     // setAllow(allow => ({ ...allow })) // TODO: hack 强制刷新, FXIME
   }
 
@@ -49,7 +58,8 @@ export class FormGroup {
   }
 
   syncFieldsValue (dataSet: PlainObject) {
-    for (const field of this.__flattenedFields.values()) {
+    this.__dataSet = dataSet
+    for (const field of this.__fieldMap.values()) {
       field.__ok_needSyncValue = true
     }
   }
@@ -63,19 +73,19 @@ export class FormGroup {
   updateError (key: string, error: string) { this.__errSet[key] = error }
   updateAllow (key: string, allow: boolean) { this.__allow[key] = allow }
 
-  field (key: string) { return utilGetFields(this.__flattenedFields, this.__dataSet, [key])[0] }
+  field (key: string) { return utilGetFields(this.__fieldMap, this.__dataSet, [key])[0] }
 
   fields (keys: string[]) {
     if (keys) {
-      return utilGetFields(this.__flattenedFields, this.__dataSet, keys)
+      return utilGetFields(this.__fieldMap, this.__dataSet, keys)
     } else {
-      return utilGetAllFields(this.__flattenedFields, this.__dataSet)
+      return utilGetAllFields(this.__fieldMap, this.__dataSet)
     }
   }
 
   // 直接在 field 上更新
   updateField (key: string, update: (field: FieldExtT) => void, notFund?: () => void) {
-    const [field] = utilGetFields(this.__flattenedFields, this.__dataSet, [key])
+    const [field] = utilGetFields(this.__fieldMap, this.__dataSet, [key])
     if (field) {
       update(field)
     } else {
@@ -83,8 +93,8 @@ export class FormGroup {
     }
   }
 
-  fieldWValidators (key: string|string[]) {
-    let filteredValidators = []
+  fieldValidators (key: string|string[]) {
+    let filteredValidators: MultiValidatorDefineT[] = []
     if (Array.isArray(key)) {
       const hasIt = new Set()
       for (const k of key) { hasIt.add(k) }
@@ -118,7 +128,27 @@ export class FormGroup {
       }
     })
   }
+}
 
+function utilCreateValidatorsMap (validators: MultiValidatorDefineT[]): ValidatorsMap {
+  const map = new Map()
+  for (const mvd of validators) {
+    const [keys] = mvd
+    for (const key of keys) {
+      if (map.has(key)) {
+        map.get(key).push(mvd)
+      } else {
+        map.set(key, [mvd])
+      }
+    }
+  }
+  return map
+}
+
+function utilCreateWatchersMap (watchers: WatcherDefineT[]): WatchersMap {
+  // const map = new Map()
+  // return map
+  return utilCreateValidatorsMap(watchers as MultiValidatorDefineT[]) as WatchersMap
 }
 
 /** 数组项: [1] = array; [2] = subProp */
@@ -143,15 +173,15 @@ function utilEmptyArrProp (key: string) { return key.replace(/\[\d+\]\./g, '[].'
 function utilSyncFieldValue (field: FieldExtT, dataSet: PlainObject) {
   if (field.__ok_needSyncValue) {
     field.__ok_preValue = field.value
-    field.value = o.get(dataSet, field.key)
+    field.value = _.get(dataSet, field.key)
     field.__ok_needSyncValue = false
   }
 }
 
 /** 根据 keys 数组 获取 Field 数组 */
-function utilGetFields (flattenedFields: Map<string, FieldExtT>, dataSet: PlainObject, keys: string[]): FieldExtT[] {
+function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, keys: string[]): (FieldExtT|undefined)[] {
   return keys.map(key => {
-    const field = flattenedFields.get(key)
+    const field = fieldMap.get(key)
     if (field) {
       utilSyncFieldValue(field, dataSet)
       return field
@@ -161,22 +191,22 @@ function utilGetFields (flattenedFields: Map<string, FieldExtT>, dataSet: PlainO
         // 转换: -> arr[].prop
         const keyWithoutIndex = utilEmptyArrProp(key)
         // 为数组项构造新的 Field
-        const toCache = new FieldExtT({ ...flattenedFields.get(keyWithoutIndex), key, value: _.get(dataSet, key), __ok_needSyncValue: false })
+        const toCache = new FieldExtT({ ...fieldMap.get(keyWithoutIndex), key, value: _.get(dataSet, key), __ok_needSyncValue: false })
         // 保存新的的 Field
-        flattenedFields.set(key, toCache)
+        fieldMap.set(key, toCache)
         return toCache
       } else {
         // 无效的 key
         console.warn('utilGetFields 无法获取 Field, 无效的 key:', key)
-        return null
+        return undefined
       }
     }
   })
 }
 
 /** 根据 dataSet 内容返回所有的 Field */
-function utilGetAllFields (flattenedFields: Map<string, FieldExtT>, dataSet: PlainObject): FieldExtT[] {
-  const fieldArr = flattenedFields.values()
+function utilGetAllFields (fieldMap: FieldMap, dataSet: PlainObject): FieldExtT[] {
+  const fieldArr = fieldMap.values()
   const fields = []
 
   // 去掉 空index[] 数组项 Field
@@ -189,7 +219,7 @@ function utilGetAllFields (flattenedFields: Map<string, FieldExtT>, dataSet: Pla
   }
 
   // 收集数组项
-  const walk = (dataSet, accKeyPath) => {
+  const walk = (dataSet: (PlainObject|any[]), accKeyPath: string) => {
     if (Array.isArray(dataSet)) {
       const arr = dataSet
       if (!arr.length) {
@@ -198,21 +228,21 @@ function utilGetAllFields (flattenedFields: Map<string, FieldExtT>, dataSet: Pla
 
       const emptiedAccKeyPath = utilEmptyArrProp(accKeyPath)
       arr.forEach((item, index) => {
-        const arrField = flattenedFields.get(emptiedAccKeyPath)
+        const arrField = fieldMap.get(emptiedAccKeyPath)
         if (arrField) {
-          const subKeys = []
+          const subKeys: string[] = []
           ;(arrField.properties || []).forEach(subField => {
             const subKey = subField.originKey
             const fieldKey = `${accKeyPath}[${index}].${subKey}`
-            if (!flattenedFields.get(fieldKey)) {
-              // 不在 flattenedFields 中
+            if (!fieldMap.get(fieldKey)) {
+              // 不在 fieldMap 中
               subKeys.push(subKey)
             }
             walk(item[subKey], fieldKey)
           })
 
           // 获取未找到的 数组项
-          fields.push(...utilGetFields(flattenedFields, dataSet, subKeys))
+          fields.push(...utilGetFields(fieldMap, dataSet, subKeys))
         }
       })
     } else if (isPlain(dataSet)) {
@@ -229,24 +259,24 @@ function utilGetAllFields (flattenedFields: Map<string, FieldExtT>, dataSet: Pla
 }
 
 /** 标准化 Field key, 并创建扁平的 Map<key, FieldExtT> */
-function uitlCreateNormalizedFieldsWithFlattenedMap (fields: FieldDefineT[]): [FieldExtT[], Map<string, FieldExtT>] {
+function uitlCreateNormalizedFieldsWithFlattenedMap (fields: FieldDefineT[]): [FieldExtT[], FieldMap] {
   const normalized = normalizeFields(fields)
   console.log('normalized Fields ->', normalized)
-  const flattened = uitlCreateFlattenedFieldsMap(normalized)
+  const flattened = uitlCreateFieldMap(normalized)
   return [normalized, flattened]
 }
 
 /** 创建扁平的 Map<key, FieldExtT> */
-function uitlCreateFlattenedFieldsMap (fields: FieldExtT[]) : Map<string, FieldExtT> {
-  const labelKeys = []
+function uitlCreateFieldMap (fields: FieldExtT[]) : FieldMap {
+  const labelKeys: string[] = []
   const flatten = (fields: FieldExtT[]): FieldExtT[] => {
     return fields
-      // .filter() // 过滤掉 非 字段 field
+      // .filter() // 过滤掉 '非字段' field
       .flatMap(field => {
         if (field.properties) {
           return [field, ...flatten(field.properties)]
         } else if (field.labelKey) {
-          labelKeys.push(field.textKey) // 记录 labelKey, 不直接添加
+          labelKeys.push(field.labelKey) // 记录 labelKey, 不直接添加
           return [field]
         } else {
           return [field]

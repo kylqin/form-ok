@@ -4,11 +4,20 @@ import { createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
 import { isPlain } from './utils';
 import { MultiValidatorDefineT } from './validation';
 
-export type WatcherDefineT = [string[], (...values: any[]) => void]
+type WatcherTriggerInfo = {
+  key?: string,
+  formGroup: FormGroup,
+  actionId: string
+}
+
+export type WatcherDefineT = [string[], (...valuesAndWatherTrigerInfo: (any|WatcherTriggerInfo)[]) => void]
 
 type FieldMap = Map<string, FieldExtT>
-type ValidatorsMap = Map<string, MultiValidatorDefineT[]>
-type WatchersMap = Map<string, WatcherDefineT[]>
+type DepMap<T> = Map<string, T[]>
+// type ValidatorsMap = Map<string, MultiValidatorDefineT[]>
+// type WatchersMap = Map<string, WatcherDefineT[]>
+type ValidatorsMap = DepMap<MultiValidatorDefineT>
+type WatchersMap = DepMap<WatcherDefineT>
 
 type FormGroupSchema = {
   fields?: FieldDefineT[],
@@ -33,7 +42,7 @@ export class FormGroup {
   private __validatorsMap: ValidatorsMap
   private __watchersMap: WatchersMap
 
-  constructor (fields: FieldDefineT[] = [], private validators: MultiValidatorDefineT[] = [], private watch: any[] = [], initalData: PlainObject) {
+  constructor (fields: FieldDefineT[] = [], private validators: MultiValidatorDefineT[] = [], private watch: WatcherDefineT[] = [], initalData: PlainObject) {
     [this.__fieldSchema, this.__fieldMap] = uitlCreateNormalizedFieldsWithFlattenedMap(fields)
     this.__validatorsMap = utilCreateValidatorsMap(this.validators)
     this.__watchersMap = utilCreateWatchersMap(this.watch)
@@ -66,7 +75,9 @@ export class FormGroup {
 
   get fieldSchema () { return this.__fieldSchema }
   get data () { return this.__dataSet }
+  set data (data: PlainObject) { this.__dataSet = data}
   get error () { return this.__errSet }
+  set error (error: PlainObject) { this.__errSet = error }
   get allow () { return this.__allow }
 
   updateData (key: string, value: any) { _.set(this.__dataSet, key, value) }
@@ -75,7 +86,9 @@ export class FormGroup {
 
   field (key: string) { return utilGetFields(this.__fieldMap, this.__dataSet, [key])[0] }
 
-  fields (keys: string[]) {
+  fields (): void
+  fields (keys: string[]): void
+  fields (keys?: string[]) {
     if (keys) {
       return utilGetFields(this.__fieldMap, this.__dataSet, keys)
     } else {
@@ -94,36 +107,24 @@ export class FormGroup {
   }
 
   fieldValidators (key: string|string[]) {
-    let filteredValidators: MultiValidatorDefineT[] = []
-    if (Array.isArray(key)) {
-      const hasIt = new Set()
-      for (const k of key) { hasIt.add(k) }
-      filteredValidators = this.validators.filter(v => v[0].find((k: string) => hasIt.has(k)))
-    } else if (key) {
-      filteredValidators = this.validators.filter(v => v[0].includes(key))
-    }
+    const filteredValidators = uitlGetByDeps(key, this.__validatorsMap)
 
     return filteredValidators.map(([deps, vFuns]) => {
       return {
         validators: vFuns,
         keys: deps,
-        // values: this.fields(deps).map(f => f.value)
         values: deps.map((key: string) => _.get(this.__dataSet, key))
       }
     })
   }
 
-  fieldWatchers (key: string) {
-    let filteredWatchers = []
-    if (key) {
-      filteredWatchers = this.watch.filter(v => v[0].includes(key))
-    }
+  fieldWatchers (key: string|string[]) {
+    const filteredWatchers: WatcherDefineT[] = uitlGetByDeps(key, this.__watchersMap)
 
     return filteredWatchers.map(([deps, handler]) => {
       return {
         handler,
         keys: deps,
-        // values: this.fields(deps).map(f => f.value)
         values: deps.map((key: string) => _.get(this.__dataSet, key))
       }
     })
@@ -131,24 +132,44 @@ export class FormGroup {
 }
 
 function utilCreateValidatorsMap (validators: MultiValidatorDefineT[]): ValidatorsMap {
+  return utilCreateMapByDeps(validators)
+}
+
+function utilCreateWatchersMap (watchers: WatcherDefineT[]): WatchersMap {
+  return utilCreateMapByDeps(watchers)
+}
+
+function utilCreateMapByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (defines: T[]): DepMap<T> {
   const map = new Map()
-  for (const mvd of validators) {
-    const [keys] = mvd
+  for (const def of defines) {
+    const [keys] = def
     for (const key of keys) {
       if (map.has(key)) {
-        map.get(key).push(mvd)
+        map.get(key).push(def)
       } else {
-        map.set(key, [mvd])
+        map.set(key, [def])
       }
     }
   }
   return map
 }
 
-function utilCreateWatchersMap (watchers: WatcherDefineT[]): WatchersMap {
-  // const map = new Map()
-  // return map
-  return utilCreateValidatorsMap(watchers as MultiValidatorDefineT[]) as WatchersMap
+function uitlGetByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (key: string|string[], depMap: Map<string,T[]>): Array<T> {
+    let filteredValidators: T[] = []
+    if (Array.isArray(key)) {
+      const hasIt = new Set() // 用于过滤掉相同的
+      for (const k of key) {
+        for (const vtor of (depMap.get(k) || [])) {
+          if (!hasIt.has(vtor[1])) { // vtor[1], 是函数
+            filteredValidators.push(vtor)
+            hasIt.add(vtor[1])
+          }
+        }
+      }
+    } else if (key) {
+      filteredValidators = depMap.get(key) || []
+    }
+    return filteredValidators
 }
 
 /** 数组项: [1] = array; [2] = subProp */

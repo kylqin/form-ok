@@ -1,7 +1,9 @@
-export class TaskManager {
-  private tasks = []
+export type Task = () => void
 
-  add (task: Function) {
+export class TaskManager {
+  private tasks: Task[] = []
+
+  add (task: Task) {
     this.tasks.push(task)
   }
 

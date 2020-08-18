@@ -53,6 +53,7 @@ const defaultValidateOptions = { ignoreRequired: false, validatorMap: {} }
 /** Validate a single Field */
 export function validateField (validators: FokValidatorDefineT[], value: any, key: string, validateOptions: ValidateOptions = defaultValidateOptions)
   : Promise<string> {
+    console.log('validate Field ->', key, value)
   //是否必填
   const _validators = validators.filter(v => v !== 'required')
   const required = _validators.length < validators.length
@@ -60,7 +61,11 @@ export function validateField (validators: FokValidatorDefineT[], value: any, ke
   const isEmpty = !value || /^\s*$/.test(value)
 
   if (isEmpty) {
-    return Promise.reject('Field is empty')
+    if (required) {
+      return Promise.reject('Field is empty')
+    } else {
+      return Promise.resolve('')
+    }
   }
 
   const { validatorMap } = validateOptions
@@ -115,6 +120,7 @@ export function validateField (validators: FokValidatorDefineT[], value: any, ke
 
 /** Validate multiple Fields */
 export function validateFields (validators: MultiValidatorDefineT[], values: any[], validateOptions: ValidateOptions = defaultValidateOptions): Promise<string> {
+  console.log('validate Field ->', validators.map(v => v[0]), values)
   return new Promise((reslove, reject) => {
     let message: string = ''
     let asyncValidators = []

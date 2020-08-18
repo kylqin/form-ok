@@ -1,4 +1,4 @@
-import * as _ from 'lodash'
+import _ from 'lodash'
 import { FieldExtT, PlainObject, FieldPropsT, FieldDefineT, createFieldExt } from './types'
 import { genID, notNull } from './utils'
 import { FormGroup } from './form-group'
@@ -76,7 +76,7 @@ function setUIProps (field: FieldExtT, commonProps: FormCommonPropsT) {
 /** 生成渲染 Field 需要的属性 */
 function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT): FieldPropsT {
   const { formGroup, readonly } = commonProps
-  const copied = new FieldPropsT(field)
+  const copied = FieldPropsT.fromFieldExtT(field)
 
   setComputeProps(copied, commonProps)
   setUIProps(copied, commonProps)
@@ -204,7 +204,9 @@ export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
     })
   }
 
-  walk(flattenNoTitleGroups(fields))
+  const flattened =flattenNoTitleGroups(fields)
 
-  return fields
+  walk(flattened)
+
+  return flattened
 }

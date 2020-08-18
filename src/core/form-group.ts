@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { normalizeFields } from './fields';
 import { createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
 import { isPlain } from './utils';

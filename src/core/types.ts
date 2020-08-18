@@ -59,13 +59,16 @@ export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
     return acc
   }, {})
 
+  // 设置 originKey
+  extField.originKey = key
+
   return extField
 }
 
 export type OnChangeCallbackT = (value: any, text: string, formGroup: FormGroup) => void
 
 export class FieldExtT extends FieldT {
-  public originKey: string
+  public originKey!: string
   public originLabelKey?: string
   public group?: FieldExtT
   public parent?: FieldExtT
@@ -79,10 +82,8 @@ export class FieldExtT extends FieldT {
 
   public readonly?: boolean
 
-  constructor(...props: any[]) {
-    super(...props)
-    this.originKey = this.key
-  }
+  public __ok_needSyncValue: boolean = true
+  public __ok_preValue?: any
 }
 
 // export type FieldPropsT = {
@@ -91,6 +92,18 @@ export class FieldExtT extends FieldT {
 // }
 export class FieldPropsT extends FieldExtT {
   public text: string = ''
+
+  static fromFieldExtT (fieldExt: FieldExtT): FieldPropsT {
+    const fieldProps = new FieldPropsT()
+
+    for (let key in fieldExt) {
+        if (fieldExt.hasOwnProperty(key)) {
+            (fieldProps as any)[key] = (fieldExt as any)[key]
+        }
+    }
+
+    return fieldProps
+  } 
 }
 
 export interface FieldDefineT extends FieldExtT {

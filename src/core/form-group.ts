@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { normalizeFields } from './fields';
 import { createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
 import { isPlain } from './utils';
-import { MultiValidatorDefineT } from './validation';
+import { MultiValidatorDefineT, ValidateCombine } from './validation';
 
 type WatcherTriggerInfo = {
   key?: string,
@@ -86,9 +86,7 @@ export class FormGroup {
 
   field (key: string) { return utilGetFields(this.__fieldMap, this.__dataSet, [key])[0] }
 
-  fields (): void
-  fields (keys: string[]): void
-  fields (keys?: string[]) {
+  fields (keys: null|string[]): (FieldExtT|null)[] {
     if (keys) {
       return utilGetFields(this.__fieldMap, this.__dataSet, keys)
     } else {
@@ -106,14 +104,13 @@ export class FormGroup {
     }
   }
 
-  fieldValidators (key: string|string[]) {
+  fieldValidators (key: null|string|string[]): ValidateCombine[] {
     const filteredValidators = uitlGetByDeps(key, this.__validatorsMap)
 
-    return filteredValidators.map(([deps, vFuns]) => {
+    return filteredValidators.map((validator) => {
       return {
-        validators: vFuns,
-        keys: deps,
-        values: deps.map((key: string) => _.get(this.__dataSet, key))
+        validator,
+        values: validator[0].map((key: string) => _.get(this.__dataSet, key))
       }
     })
   }
@@ -154,7 +151,7 @@ function utilCreateMapByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (de
   return map
 }
 
-function uitlGetByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (key: string|string[], depMap: Map<string,T[]>): Array<T> {
+function uitlGetByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (key: null|string|string[], depMap: Map<string,T[]>): Array<T> {
     let filteredValidators: T[] = []
     if (Array.isArray(key)) {
       const hasIt = new Set() // 用于过滤掉相同的
@@ -200,7 +197,7 @@ function utilSyncFieldValue (field: FieldExtT, dataSet: PlainObject) {
 }
 
 /** 根据 keys 数组 获取 Field 数组 */
-function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, keys: string[]): (FieldExtT|undefined)[] {
+function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, keys: string[]): (FieldExtT|null)[] {
   return keys.map(key => {
     const field = fieldMap.get(key)
     if (field) {
@@ -219,7 +216,7 @@ function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, keys: string[]
       } else {
         // 无效的 key
         console.warn('utilGetFields 无法获取 Field, 无效的 key:', key)
-        return undefined
+        return null
       }
     }
   })

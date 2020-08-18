@@ -1,12 +1,22 @@
 import * as _ from 'lodash'
 import { FieldExtT, PlainObject, FieldPropsT, FieldDefineT, createFieldExt } from './types'
 import { genID, notNull } from './utils'
+import { FormGroup } from './form-group'
+
+type PropsGetter = (field: FieldExtT) => FieldPropsT
+
+export type FormCommonPropsT = {
+  formGroup: FormGroup,
+  readonly: boolean
+  disabled: boolean
+  propsGetter?: PropsGetter
+}
 
 const genKey = () => genID('__key_')
 
 /** 让计算属性函数中 对数据的访问可以通过 ds['.key'], ds['key.subKey'], ds['arr[3].subKey'] 的语法进行访问 */
-const genGetProxy = (dp: { dataSet: PlainObject }, field: FieldExtT, parent?: FieldExtT) => {
-  return new Proxy(dp.dataSet, {
+const genGetProxy = (dp: { data: PlainObject }, field: FieldExtT, parent?: FieldExtT) => {
+  return new Proxy(dp.data, {
     get (dataSet, key: string) {
       return key[0] !== '.' // 'key', 'book.mark'
         ? _.get(dataSet, key) // '.key', '.book.mark'
@@ -22,36 +32,29 @@ const genGetProxy = (dp: { dataSet: PlainObject }, field: FieldExtT, parent?: Fi
 /** UI 相关属性 */
 const UiProps = new Set(['readonly', 'disabled', 'hidden'])
 
-export type FormCommonPropsT = {
-  dsPack: any
-  readonly: boolean
-  disabled: boolean
-  cachedFieldProps: PlainObject
-}
-
 /** 设置计算属性 */
 function setComputeProps (field: FieldExtT, commonProps: FormCommonPropsT) {
-  const { dsPack } = commonProps
+  const { formGroup } = commonProps
 
   if (field.compute) {
-    const Get = genGetProxy(dsPack, field, field.parent)
+    const Get = genGetProxy(formGroup, field, field.parent)
     Object.keys(field.compute).forEach(propName => {
       if ((field.group || field.parent) && UiProps.has(propName)) {
         // 如果 该属性为 UI 相关属性，且有 所属组(group) 或 父亲(parent)
         // 所属组 优先于 父亲
 
-        const groupProps = makeFieldProps((field.group || field.parent)!, commonProps)
+        const groupProps = commonProps.propsGetter!((field.group || field.parent)!)
 
         if ((groupProps as any)[propName]) {
           // 且 group/parent 的 该 UI 相关属性 为 true, 优先使用 group/parent 的属性
           (field as any)[propName] = true
         } else {
           // 否则, 计算之
-          (field as any)[propName] = field.compute![propName](Get, field, dsPack)
+          (field as any)[propName] = field.compute![propName](Get, field, formGroup)
         }
       } else {
         // 否则， 计算之
-        (field as any)[propName] = field.compute![propName](Get, field, dsPack)
+        (field as any)[propName] = field.compute![propName](Get, field, formGroup)
       }
     })
   }
@@ -61,7 +64,7 @@ function setComputeProps (field: FieldExtT, commonProps: FormCommonPropsT) {
 function setUIProps (field: FieldExtT, commonProps: FormCommonPropsT) {
   if (field.group || field.parent) {
     for (const propName of UiProps.values()) {
-      const groupProps = makeFieldProps((field.group || field.parent)!, commonProps)
+      const groupProps = commonProps.propsGetter!((field.group || field.parent)!)
       if ((groupProps as any)[propName]) {
         // 若 其 group/parent 的 UI 相关属性 位置，则覆盖
         (field as any)[propName] = true
@@ -70,35 +73,16 @@ function setUIProps (field: FieldExtT, commonProps: FormCommonPropsT) {
   }
 }
 
-// function makeFieldPropsProxy (fieldProps: FieldPropsT) {
-//   return new Proxy(fieldProps, {
-//     get (fp, key) {
-//       return (fp as any)[key] || (fp.props as any)[key] || (fp.field as any)[key]
-//     },
-//     set (fp, key, value) {
-//       (fp.props as any)[key] = value
-//       return true
-//     }
-//   })
-// }
-
-
 /** 生成渲染 Field 需要的属性 */
-export function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT): FieldPropsT {
-  if (commonProps.cachedFieldProps[field.key]) {
-    // 返回缓存
-    return commonProps.cachedFieldProps[field.key]
-  }
-
-  const { dsPack, readonly } = commonProps
-  // const proxy: any = makeFieldPropsProxy({ field, props: new FieldExtT(field) })
+function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT): FieldPropsT {
+  const { formGroup, readonly } = commonProps
   const copied = new FieldPropsT(field)
 
   setComputeProps(copied, commonProps)
   setUIProps(copied, commonProps)
 
   // 设置 text
-  copied.text = copied.labelKey ? _.get(dsPack.dataSet, copied.labelKey) : ''
+  copied.text = copied.labelKey ? _.get(formGroup.data, copied.labelKey) : ''
 
   // 全局 readonly 覆盖
   copied.readonly = readonly || copied.readonly
@@ -111,10 +95,26 @@ export function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT)
   copied.enums = (copied.enums || []) // TODO: 如果 数组很大会影响性能
     .filter(e => notNull(e.value) && notNull(e.label))
 
-  // 缓存
-  commonProps.cachedFieldProps[field.key] = copied
-
   return copied as FieldPropsT
+}
+
+/** 生成 propsGetter */
+export function createMemoPropsGetter (commonProps: FormCommonPropsT): PropsGetter {
+  const cachedProps: Map<string, FieldPropsT> = new Map()
+
+  commonProps.propsGetter = (field: FieldExtT) => {
+    if (cachedProps.has(field.key)) {
+    // 返回缓存
+      return cachedProps.get(field.key)!
+    }
+
+    const toCache = makeFieldProps(field, commonProps)
+    // 缓存
+    cachedProps.set(field.key, toCache)
+    return toCache
+  }
+
+  return commonProps.propsGetter
 }
 
 /** 是否为 无标题组 */
@@ -160,8 +160,6 @@ function flattenNoTitleGroups (fields: FieldDefineT[], parent?: FieldDefineT): F
 /** 标准化 field 的 key 属性，使之在整棵 fields 树中 唯一，即: 对象属性(parent.key), 数组属性(array[].key)*/
 /** 设置 originKey, compute, 建立 树结构关系, group/parent */
 export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
-  const resultFields: FieldExtT[] = []
-
   const walk = (fields: FieldDefineT[], parent?: FieldExtT) => {
     fields.forEach(field => {
       // 直接在 field 上修改， 因为 flattenNotTitleGroups 返回的是副本

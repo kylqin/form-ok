@@ -1,4 +1,5 @@
 import { FokValidatorDefineT } from './validation'
+import { FormGroup } from './form-group'
 
 export class ErrorT {
   constructor(public message: string) {}
@@ -14,7 +15,7 @@ export type EnumItemT = {
   label: string
 }
 
-export type ComputePropT = (dataSet: any, field: FieldExtT, dsPack: PlainObject) => any
+export type ComputePropT = (dataSet: any, field: FieldExtT, formGroup: FormGroup) => any
 
 export type FieldTypeT = 'number' | 'string' | 'boolean' | 'object' | 'array' | 'date'
 // export enum  FieldTypeT
@@ -61,7 +62,7 @@ export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
   return extField
 }
 
-export type OnChangeCallbackT = (value: any, text: string, dsPack: any) => void
+export type OnChangeCallbackT = (value: any, text: string, formGroup: FormGroup) => void
 
 export class FieldExtT extends FieldT {
   public originKey: string

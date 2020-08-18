@@ -18,6 +18,11 @@ export type AsyncMultiValidatorT = [string[], (...values: any[]) => Promise<FokV
 export type FokValidatorDefineT = (string|FokValidatorT|AsyncValidatorDeifneT)
 export type MultiValidatorDefineT = (MultiValidatorT|AsyncMultiValidatorT)
 
+export type ValidateCombine = {
+  validator: MultiValidatorDefineT,
+  values: any[]
+}
+
 // type PenddingAsyncValidatorT = { fieldKey: string, exec: AsyncValidatorT }
 
 /** Async Validation */
@@ -109,7 +114,7 @@ export function validateField (validators: FokValidatorDefineT[], value: any, ke
 }
 
 /** Validate multiple Fields */
-export function validateFields (validators: MultiValidatorDefineT[], values: [], validateOptions: ValidateOptions = defaultValidateOptions): Promise<string> {
+export function validateFields (validators: MultiValidatorDefineT[], values: any[], validateOptions: ValidateOptions = defaultValidateOptions): Promise<string> {
   return new Promise((reslove, reject) => {
     let message: string = ''
     let asyncValidators = []

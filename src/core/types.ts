@@ -99,7 +99,7 @@ export class FieldExtT extends FieldT {
   public markNeedSyncValue (need = true) { this.__ok_needSyncValue = need }
 
   /** clone */
-  public clone () { return clone(this, new FieldExtT()) }
+  public clone () { return clone(this, new FieldExtT()) as FieldExtT }
 }
 
 // export type FieldPropsT = {
@@ -110,9 +110,7 @@ export class FieldPropsT extends FieldExtT {
   public text: string = ''
 
   static fromFieldExtT (fieldExt: FieldExtT): FieldPropsT {
-    const fieldProps = new FieldPropsT()
-    clone(fieldExt, fieldProps)
-    return fieldProps
+    return clone(fieldExt, new FieldPropsT()) as FieldPropsT
   } 
 }
 

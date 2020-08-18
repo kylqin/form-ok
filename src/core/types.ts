@@ -1,5 +1,7 @@
+import _ from 'lodash';
 import { FokValidatorDefineT } from './validation'
 import { FormGroup } from './form-group'
+import { clone } from './utils';
 
 export class ErrorT {
   constructor(public message: string) {}
@@ -82,8 +84,22 @@ export class FieldExtT extends FieldT {
 
   public readonly?: boolean
 
-  public __ok_needSyncValue: boolean = true
-  public __ok_preValue?: any
+  private __ok_needSyncValue: boolean = true
+  private __ok_preValue?: any
+
+  /** 同步 Field value */
+  public syncFieldValue (dataSet: PlainObject) {
+    if (this.__ok_needSyncValue) {
+      this.__ok_preValue = this.value
+      this.value = _.get(dataSet, this.key)
+      this.__ok_needSyncValue = false
+    }
+  }
+  /** 标记 Field 需要同步值 */
+  public markNeedSyncValue (need = true) { this.__ok_needSyncValue = need }
+
+  /** clone */
+  public clone () { return clone(this, new FieldExtT()) }
 }
 
 // export type FieldPropsT = {
@@ -95,13 +111,7 @@ export class FieldPropsT extends FieldExtT {
 
   static fromFieldExtT (fieldExt: FieldExtT): FieldPropsT {
     const fieldProps = new FieldPropsT()
-
-    for (let key in fieldExt) {
-        if (fieldExt.hasOwnProperty(key)) {
-            (fieldProps as any)[key] = (fieldExt as any)[key]
-        }
-    }
-
+    clone(fieldExt, fieldProps)
     return fieldProps
   } 
 }

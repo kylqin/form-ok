@@ -18,3 +18,13 @@ export function genID (prefix = '') {
 
 /** notNU: Not null and not Undefined */
 export const notNull = (v: any) => v !== null && v !== undefined
+
+/** clone 对象 */
+export function clone (source: any, target: any) {
+  for (let key in source) {
+    if (source.hasOwnProperty(key)) {
+      target[key] = source[key]
+    }
+  }
+  return target
+}

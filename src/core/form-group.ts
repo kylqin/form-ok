@@ -69,7 +69,7 @@ export class FormGroup {
   syncFieldsValue (dataSet: PlainObject) {
     this.__dataSet = dataSet
     for (const field of this.__fieldMap.values()) {
-      field.__ok_needSyncValue = true
+      field.markNeedSyncValue()
     }
   }
 
@@ -187,21 +187,12 @@ function utilPraseArrProp (key: string) {
 /** 转换数组项的 key: key1[3].key2[1].key3 => key1[].key2[].key3 */
 function utilEmptyArrProp (key: string) { return key.replace(/\[\d+\]\./g, '[].') }
 
-/** 同步 Field value */
-function utilSyncFieldValue (field: FieldExtT, dataSet: PlainObject) {
-  if (field.__ok_needSyncValue) {
-    field.__ok_preValue = field.value
-    field.value = _.get(dataSet, field.key)
-    field.__ok_needSyncValue = false
-  }
-}
-
 /** 根据 keys 数组 获取 Field 数组 */
 function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, keys: string[]): (FieldExtT|null)[] {
   return keys.map(key => {
     const field = fieldMap.get(key)
     if (field) {
-      utilSyncFieldValue(field, dataSet)
+      field.syncFieldValue(dataSet)
       return field
     } else {
       const matched = key.match(RegArrProp)
@@ -209,10 +200,19 @@ function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, keys: string[]
         // 转换: -> arr[].prop
         const keyWithoutIndex = utilEmptyArrProp(key)
         // 为数组项构造新的 Field
-        const toCache = new FieldExtT({ ...fieldMap.get(keyWithoutIndex), key, value: _.get(dataSet, key), __ok_needSyncValue: false })
-        // 保存新的的 Field
-        fieldMap.set(key, toCache)
-        return toCache
+        const toCache = fieldMap.get(keyWithoutIndex)?.clone()
+        if (toCache) {
+          toCache.key = key
+          toCache.value = _.get(dataSet, key)
+          toCache.markNeedSyncValue(false)
+          // 保存新的的 Field
+          fieldMap.set(key, toCache)
+          return toCache
+        } else {
+          // 无效的 key
+          console.warn('utilGetFields 无法获取 Field, 无效的 key:', key)
+          return null
+        }
       } else {
         // 无效的 key
         console.warn('utilGetFields 无法获取 Field, 无效的 key:', key)
@@ -231,7 +231,7 @@ function utilGetAllFields (fieldMap: FieldMap, dataSet: PlainObject): FieldExtT[
   for (const field of fieldArr) {
     const [isArrProp, _, index] = utilPraseArrProp(field.key)
     if (!isArrProp && index === '') {
-      utilSyncFieldValue(field, dataSet)
+      field.syncFieldValue(dataSet)
       fields.push(field)
     }
   }

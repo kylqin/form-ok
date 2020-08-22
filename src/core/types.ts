@@ -3,6 +3,11 @@ import { FokValidatorDefineT } from './validation'
 import { FormGroup } from './form-group'
 import { clone } from './utils';
 
+export type ValueParserT = {
+  toData: (value: any, field: FieldPropsT) => any
+  toWidget: (value: any, field: FieldPropsT) => any
+}
+
 export class ErrorT {
   constructor(public message: string) {}
 }
@@ -108,10 +113,15 @@ export class FieldExtT extends FieldT {
 // }
 export class FieldPropsT extends FieldExtT {
   public text: string = ''
+  public fieldKey?: string = ''
+  public disabled?: boolean
+  public hidden?: boolean
+  public tooltip?: string
+  public span?: number = 1
 
   static fromFieldExtT (fieldExt: FieldExtT): FieldPropsT {
     return clone(fieldExt, new FieldPropsT()) as FieldPropsT
-  } 
+  }
 }
 
 export interface FieldDefineT extends FieldExtT {

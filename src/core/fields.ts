@@ -6,7 +6,7 @@ import { FormGroup } from './form-group'
 type PropsGetter = (field: FieldExtT) => FieldPropsT
 
 export type FormCommonPropsT = {
-  formGroup: FormGroup,
+  formGroup: FormGroup
   readonly: boolean
   disabled: boolean
   propsGetter?: PropsGetter
@@ -80,6 +80,9 @@ function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT): Field
 
   setComputeProps(copied, commonProps)
   setUIProps(copied, commonProps)
+
+  // 设置 fieldKey
+  copied.fieldKey = copied.key
 
   // 设置 text
   copied.text = copied.labelKey ? _.get(formGroup.data, copied.labelKey) : ''

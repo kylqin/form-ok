@@ -3,6 +3,7 @@ import { normalizeFields } from './fields';
 import { createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
 import { isPlain } from './utils';
 import { MultiValidatorDefineT, ValidateCombine } from './validation';
+import { ActionsT } from './actions';
 
 type WatcherTriggerInfo = {
   key?: string,
@@ -19,7 +20,7 @@ type DepMap<T> = Map<string, T[]>
 type ValidatorsMap = DepMap<MultiValidatorDefineT>
 type WatchersMap = DepMap<WatcherDefineT>
 
-type FormGroupSchema = {
+export type FormGroupSchema = {
   fields?: FieldDefineT[],
   validators?: MultiValidatorDefineT[],
   watch?: WatcherDefineT[],
@@ -42,11 +43,14 @@ export class FormGroup {
   private __validatorsMap: ValidatorsMap
   private __watchersMap: WatchersMap
 
+  public actions: ActionsT
+
   constructor (fields: FieldDefineT[] = [], private validators: MultiValidatorDefineT[] = [], private watch: WatcherDefineT[] = [], initalData: PlainObject) {
     [this.__fieldSchema, this.__fieldMap] = uitlCreateNormalizedFieldsWithFlattenedMap(fields)
     this.__validatorsMap = utilCreateValidatorsMap(this.validators)
     this.__watchersMap = utilCreateWatchersMap(this.watch)
     this.__dataSet = initalData
+    this.actions = new ActionsT(this)
   }
 
   updateFieldSchema (fields: FieldDefineT[]) {

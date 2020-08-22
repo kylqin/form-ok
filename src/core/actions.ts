@@ -1,4 +1,4 @@
-import * as _ from 'lodash'
+import _ from 'lodash'
 import { FormGroup } from './form-group';
 import { TaskManager } from './task-manager';
 import { PlainObject, FieldDefineT, FieldPropsT } from './types';

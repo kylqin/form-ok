@@ -2,6 +2,7 @@
 import { FormGroupSchema, createFormGroup, FormGroup } from '/@/core/form-group'
 import { PlainObject } from '/@/core/types'
 import { useMemo, useState, useEffect, ReactComponentElement } from 'react'
+import { BaseWidget } from './antd/widgets';
 
 export function useFormGroup (schema: FormGroupSchema, initialData: PlainObject = {}) {
   const formGroup = useMemo(() => { console.log('<memo>'); return createFormGroup(schema, initialData) }, [])
@@ -13,21 +14,26 @@ export function useListen (formGroup: FormGroup, key: string, prop: string, init
   const [val, setVal] = useState(initialValue)
 
   useEffect(() => {
-    formGroup.eventBus.add(key, () => {
+    const updateVal = () => {
       // console.log('event bus ->', key, prop)
       setVal((formGroup.field(key)! as any)[prop])
-    })
+    }
+
+    formGroup.eventBus.add(key, updateVal)
+    return () => { formGroup.eventBus.remove(key, updateVal)}
   }, [])
   return val
 }
 
-export function useListenState (comp: React.Component, formGroup: FormGroup, key: string, prop: string, initialValue: any) {
-  formGroup.eventBus.add(key, () => {
+export function useListenState (comp: BaseWidget, formGroup: FormGroup, key: string, prop: string, initialValue: any) {
+  const updateVal = () => {
     console.log('uselistenState event bus ->', key, prop)
     comp.setState({
       [prop]: (formGroup.field(key)! as any)[prop]
     })
-  })
+  }
+  comp.listenersToRemove.push([key, updateVal])
+  formGroup.eventBus.add(key, updateVal)
 
   return initialValue
 }

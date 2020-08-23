@@ -10,16 +10,31 @@ export type FieldPropsBaseT = Omit<FieldPropsT, 'syncFieldValue|markNeedSyncValu
 export class BaseWidget extends React.Component<FieldPropsBaseT> {
   private _handleChange
   private _handleBlur
+  public listenersToRemove: any[] = []
+
   constructor (props) {
     super(props)
 
     this.state = {
-      // value: props.value
-      value: useListenState(this, props.commonProps.formGroup, props.fieldKey!, 'value', props.value)
+      value: props.value
     }
 
     this._handleChange = this.handleChange.bind(this)
     this._handleBlur = this.handleBlur.bind(this)
+  }
+
+  componentDidMount () {
+    const { commonProps, fieldKey, value } = this.props
+    this.setState({
+      value: useListenState(this, commonProps.formGroup, fieldKey!, 'value', value)
+    })
+  }
+
+  componentWillUnmount () {
+    // 去掉 useListenState
+    for (const l of this.listenersToRemove) {
+      this.props.commonProps.formGroup.eventBus.remove(l[0], l[1])
+    }
   }
 
   getWidgetOptions () { return WidgetMap[this.props.widget] }

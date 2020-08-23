@@ -11,6 +11,8 @@ export function ContentBox ({ defaultClosed = false, title = '', children, ...pr
     className={`fok-content-box ${collapsed ? 'fok-content-box-collapsed' : ''}`}
     extra={title && <div onClick={() => setCollpased(!collapsed)}>{collapsed ? <LeftOutlined /> : <DownOutlined/>}</div>}
   >
-    {children}
+    <div className='fok-content-box-content'>
+      {children}
+    </div>
   </Card>
 }

@@ -4,6 +4,7 @@ import { createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
 import { isPlain } from './utils';
 import { MultiValidatorDefineT, ValidateCombine } from './validation';
 import { ActionsT } from './actions';
+import { EventBus } from './events'
 
 type WatcherTriggerInfo = {
   key?: string,
@@ -44,6 +45,8 @@ export class FormGroup {
   private __watchersMap: WatchersMap
 
   public actions: ActionsT
+
+  public eventBus = new EventBus()
 
   constructor (fields: FieldDefineT[] = [], private validators: MultiValidatorDefineT[] = [], private watch: WatcherDefineT[] = [], initalData: PlainObject) {
     [this.__fieldSchema, this.__fieldMap] = uitlCreateNormalizedFieldsWithFlattenedMap(fields)

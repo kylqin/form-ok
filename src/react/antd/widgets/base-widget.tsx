@@ -2,6 +2,7 @@ import React from 'react'
 import { FieldPropsT } from '/@/core/types'
 import { WidgetMap } from '../widget-map'
 import { FormCommonPropsExtT } from '../input-set'
+import { useListenState } from '../../hooks'
 
 export type FieldPropsBaseT = Omit<FieldPropsT, 'syncFieldValue|markNeedSyncValue|clone'> & { commonProps: FormCommonPropsExtT }
 
@@ -11,6 +12,11 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
   private _handleBlur
   constructor (props) {
     super(props)
+
+    this.state = {
+      // value: props.value
+      value: useListenState(this, props.commonProps.formGroup, props.fieldKey!, 'value', props.value)
+    }
 
     this._handleChange = this.handleChange.bind(this)
     this._handleBlur = this.handleBlur.bind(this)
@@ -72,7 +78,8 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
   }
 
   getValue () {
-    const { value } = this.props
+    // const { value } = this.props
+    const { value } = this.state
     return this.parseValueIn(value === '' || value === null ? undefined : value)
   }
 

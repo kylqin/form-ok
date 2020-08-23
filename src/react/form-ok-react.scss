@@ -43,4 +43,25 @@
 
     }
   }
+
+  .fok-form-item-combination {
+    width: 100%;
+    margin-right: 20px;
+  }
+}
+
+.fok-content-box {
+  &.fok-content-box-collapsed {
+    .fok-content-box-content {
+      display: none;
+    }
+  }
+
+  .ant-card-head {
+    min-height: 0;
+    text-align: left;
+  }
+  .ant-card-head-title, .ant-card-extra {
+    padding: 6px 0;
+  }
 }

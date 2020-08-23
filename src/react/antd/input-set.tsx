@@ -37,7 +37,7 @@ export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsEx
     if (!fieldProps.widget) {
       fieldProps.widget = 'input'
     }
-    console.log('fieldProps ->', fieldProps)
+    // console.log('fieldProps ->', fieldProps)
     switch (field.widget) {
       case 'box':
         Comp = createBoxComponent(fieldProps, commonProps)
@@ -57,8 +57,8 @@ export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsEx
           throw Error(`Invalid Widget Type ${fieldProps.widget}`)
         }
         const key = fieldProps.fieldKey!
-        console.log('(commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly')
-        console.log((commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly)
+        // console.log('(commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly')
+        // console.log((commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly)
         if ((commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly) {
           if (widgetOptions.notField || widgetOptions.noWrapper) {
             Comp = <widgetOptions.widget {...fieldProps} commonProps={commonProps} key={key} />

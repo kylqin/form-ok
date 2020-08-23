@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { FormGroup } from './form-group';
 import { TaskManager } from './task-manager';
-import { PlainObject, FieldDefineT, FieldPropsT } from './types';
+import { PlainObject, FieldDefineT, FieldPropsT, FieldExtT } from './types';
 import { ValidateOptions, validateField, validateFields, ValidateCombine } from './validation';
 import { FormCommonPropsT, createMemoPropsGetter } from './fields';
 
@@ -15,6 +15,7 @@ export class ActionsT {
   newField (field: FieldDefineT) {}
 
   changeField (key: string, value: any, actionId?: string) {
+    console.log('changeField ->', key, value, actionId)
     actionChangeField(this, this.formGroup, key, value, actionId)
   }
 
@@ -24,9 +25,18 @@ export class ActionsT {
 
   deleteFeild (key: string) {}
 
-  setError (key: string, message: string) {}
+  setError (key: string, message: string) {
+    console.log('setError ->', key, message)
+    this.formGroup.updateField(key, (field: FieldExtT) => {
+      field.errors = [{ message: message }]
+    })
+  }
 
-  deleteError (key: string) {}
+  deleteError (key: string) {
+    this.formGroup.updateField(key, (field: FieldExtT) => {
+      field.errors = []
+    })
+  }
 
   clearErrors () {}
 
@@ -55,6 +65,9 @@ function actionNewField (actions: ActionsT, formGroup: FormGroup, field: FieldDe
 function actionChangeField (actions: ActionsT, formGroup: FormGroup, key: string, value: any, actionId?: string) {
   // 改变 data
   formGroup.updateData(key, value)
+  formGroup.updateField(key, field => {
+    field.markNeedSyncValue()
+  })
 
   actionUtilTrigger(actions, formGroup, key, actionId)
 }
@@ -66,7 +79,9 @@ function actionChangeFields (actions: ActionsT, formGroup: FormGroup, keyValueMa
   // 改变 data
   keys.forEach(key => {
     formGroup.updateData(key, keyValueMap[key])
-    // values.push(keyValueMap[key])
+    formGroup.updateField(key, field => {
+      field.markNeedSyncValue()
+    })
   })
   actionUtilTrigger(actions, formGroup, keys, actionId)
 }
@@ -80,6 +95,14 @@ function actionUtilTrigger (actions: ActionsT, formGroup: FormGroup, key: string
   actionUtilTriggerValidation(actions, key)
 
   // TODO: nextTick 执行 tasks
+  Promise.resolve().then(() => {
+    // console.log(actions._taskManager)
+    actions._taskManager.run()
+  }).then(() => {
+    if (typeof key === 'string') {
+      formGroup.eventBus.dispatch(key, {})
+    }
+  })
 }
 
 
@@ -106,6 +129,8 @@ async function actionValidate (
   validatorOptions: ValidateOptions): Promise<ActionValidateResultT> {
   const commonProps: FormCommonPropsT = { formGroup, readonly: false, disabled: false }
   createMemoPropsGetter(commonProps)
+
+  // console.log('commonProps ->', commonProps)
 
   const validateSingle = async (f: FieldPropsT): Promise<ActionValidateResultT> => {
     try {

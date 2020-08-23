@@ -1,10 +1,11 @@
-import React from 'react'
 import { FieldPropsT } from '@/core/types'
-import { FormCommonPropsT } from '@/core/fields'
+import React from 'react'
+import { FormCommonPropsExtT, renderCtrls } from '../input-set'
 import { ContentBox } from './content-box'
 
-export const BoxItem = (props: { field: FieldPropsT, commonProps: FormCommonPropsT }) => {
+export const BoxItem = (props: { field: FieldPropsT, commonProps: FormCommonPropsExtT }) => {
   const { readonly, disabled, hidden, fieldKey, title, properties } = props.field
+  const { commonProps } = props
 
   if (hidden) { return <div /> }
 

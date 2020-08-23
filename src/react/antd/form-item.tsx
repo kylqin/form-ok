@@ -1,14 +1,25 @@
 import { FieldPropsT } from '/@/core/types'
 import { QuestionCircleOutlined } from '@ant-design/icons'
 import { Tooltip } from 'antd'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import '../form-ok-react.scss'
 import { FormCommonPropsExtT } from './input-set'
+import { useListen } from '../hooks'
 
 export function FormItem (props: { field: FieldPropsT, commonProps: FormCommonPropsExtT, children: any }) {
-  const { vertical, column, gap } = props.commonProps
-  const { fieldKey, title, required, disabled, readonly, hidden, tooltip, widget, span = 1, errors } = props.field
+  const { formGroup, vertical, column, gap } = props.commonProps
+  const { fieldKey, title, required, disabled, readonly, hidden, tooltip, widget, span = 1 } = props.field
+  // const { fieldKey, title, tooltip, widget, span = 1 } = props.field
   const { children } = props
+
+  const errors = useListen(formGroup, fieldKey!, 'errors', props.field.errors)
+
+  // const required = useListen(formGroup, fieldKey!, 'required', props.field.required)
+  // const disabled = useListen(formGroup, fieldKey!, 'disabled', props.field.disabled)
+  // const readonly = useListen(formGroup, fieldKey!, 'readonly', props.field.readonly)
+  // const hidden = useListen(formGroup, fieldKey!, 'hidden', props.field.hidden)
+
+  // console.log('render form item')
 
   let tooltipComponent
   if (tooltip) {

@@ -5,7 +5,10 @@ import { registerWidgets } from './register-widget'
 
 export class InputWidget extends BaseWidget {
   render () {
-    return <Input {...this.getAttrs()} {...this.getInputProps()} />
+    // console.log('this.getAttrs(), this.getInputProps()', this.getAttrs(), this.getInputProps())
+    return <Input {...this.getInputProps()} />
+    // return <Input {...this.getAttrs()} />
+    // return <Input {...this.getAttrs()} {...this.getInputProps()} />
   }
 }
 

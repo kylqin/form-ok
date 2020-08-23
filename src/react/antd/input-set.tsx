@@ -37,6 +37,7 @@ export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsEx
     if (!fieldProps.widget) {
       fieldProps.widget = 'input'
     }
+    console.log('fieldProps ->', fieldProps)
     switch (field.widget) {
       case 'box':
         Comp = createBoxComponent(fieldProps, commonProps)
@@ -55,19 +56,22 @@ export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsEx
         if (!widgetOptions) {
           throw Error(`Invalid Widget Type ${fieldProps.widget}`)
         }
+        const key = fieldProps.fieldKey!
+        console.log('(commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly')
+        console.log((commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly)
         if ((commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly) {
           if (widgetOptions.notField || widgetOptions.noWrapper) {
-            Comp = <widgetOptions.widget {...fieldProps} />
+            Comp = <widgetOptions.widget {...fieldProps} commonProps={commonProps} key={key} />
           } else if (widgetOptions.noWrapper) {
-            Comp = <widgetOptions.readonly {...fieldProps} />
+            Comp = <widgetOptions.readonly {...fieldProps} commonProps={commonProps} key={key} />
           } else {
-            Comp = <FormItem field={fieldProps} commonProps={commonProps}><widgetOptions.readonly {...fieldProps} /></FormItem>
+            Comp = <FormItem field={fieldProps} commonProps={commonProps} key={key}><widgetOptions.readonly {...fieldProps} commonProps={commonProps} /></FormItem>
           }
         } else {
           if (widgetOptions.notField || widgetOptions.noWrapper) {
-            Comp = <widgetOptions.widget {...fieldProps} />
+            Comp = <widgetOptions.widget {...fieldProps} commonProps={commonProps} key={key} />
           } else {
-            Comp = <FormItem field={fieldProps} commonProps={commonProps}><widgetOptions.widget {...fieldProps} /></FormItem>
+            Comp = <FormItem field={fieldProps} commonProps={commonProps} key={key}><widgetOptions.widget {...fieldProps} commonProps={commonProps} /></FormItem>
           }
         }
         break
@@ -86,7 +90,7 @@ export type InputSetPropsT = {
 }
 
 export function InputSet (props: InputSetPropsT) {
-  const { formGroup, vertical = false, readonly = false, column = 3, gap = 3 } = props
+  const { formGroup, vertical = false, readonly = false, column = 3, gap = 20 } = props
 
   const fields: FieldExtT[] = formGroup.fieldSchema
 

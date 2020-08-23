@@ -54,9 +54,12 @@ export function createField ({ key, labelKey, title, value, errors, required, va
 }
 
 export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
-  const { key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, ...restProps } = fieldDefine
+  const { key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, /** */readonly, ...restProps } = fieldDefine
   const extField = new FieldExtT(key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
   const restPropNames = Object.keys(restProps)
+
+  extField.readonly = readonly
+  extField.exts = restProps
 
   // 设置 compute
   extField.compute = restPropNames.reduce((acc: PlainObject, propName) => {
@@ -89,7 +92,9 @@ export class FieldExtT extends FieldT {
 
   public readonly?: boolean
 
-  private __ok_needSyncValue: boolean = true
+  public exts: PlainObject = {}
+
+  private __ok_needSyncValue?: boolean = true
   private __ok_preValue?: any
 
   /** 同步 Field value */
@@ -120,7 +125,12 @@ export class FieldPropsT extends FieldExtT {
   public span?: number = 1
 
   static fromFieldExtT (fieldExt: FieldExtT): FieldPropsT {
-    return clone(fieldExt, new FieldPropsT()) as FieldPropsT
+    const props = clone(fieldExt, new FieldPropsT()) as FieldPropsT
+    props.disabled = fieldExt.exts.disabled
+    props.hidden = fieldExt.exts.hidden
+    props.tooltip = fieldExt.exts.tooltip
+    props.span = fieldExt.exts.span
+    return props
   }
 }
 

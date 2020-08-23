@@ -8,7 +8,7 @@ import { ActionsT } from './actions';
 type WatcherTriggerInfo = {
   key?: string,
   formGroup: FormGroup,
-  actionId: string
+  actionId?: string
 }
 
 export type WatcherDefineT = [string[], (...valuesAndWatherTrigerInfo: (any|WatcherTriggerInfo)[]) => void]

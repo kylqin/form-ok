@@ -1,9 +1,12 @@
 import React from 'react'
-import { FieldPropsT } from '@/core/types'
+import { FieldPropsT } from '/@/core/types'
 import { WidgetMap } from '../widget-map'
+import { FormCommonPropsExtT } from '../input-set'
+
+export type FieldPropsBaseT = Omit<FieldPropsT, 'syncFieldValue|markNeedSyncValue|clone'> & { commonProps: FormCommonPropsExtT }
 
 /** InputSet Controller Base Component */
-export class BaseWidget extends React.Component<FieldPropsT> {
+export class BaseWidget extends React.Component<FieldPropsBaseT> {
   private _handleChange
   private _handleBlur
   constructor (props) {
@@ -17,9 +20,9 @@ export class BaseWidget extends React.Component<FieldPropsT> {
 
   /** 解析向外的 value, toData */
   parseValueOut (value: any) {
-    const { widget, valueParser } = this.props
+    const { widget } = this.props
     // 必要是，对 value 进行相应的 parse
-    const vp = valueParser || WidgetMap[widget].valueParser
+    const vp = WidgetMap[widget].valueParser
     if (vp && vp.toData) {
       return vp.toData(value, this.props)
     }
@@ -27,10 +30,10 @@ export class BaseWidget extends React.Component<FieldPropsT> {
   }
 
   parseValueIn (value: any) {
-    const { widget, valueParser, commonProps: { formGroup } } = this.props
+    const { widget, commonProps: { formGroup } } = this.props
 
     // 解析进来的 value
-    const vp = valueParser || WidgetMap[widget].valueParser
+    const vp = WidgetMap[widget].valueParser
     if (vp && vp.toWidget) {
       return vp.toWidget(value, this.props, formGroup.data)
     }
@@ -51,11 +54,11 @@ export class BaseWidget extends React.Component<FieldPropsT> {
     if (labelKey) {
       text = this.parseValueOut(text)
       formGroup.actions.changeFields({
-        [fieldKey]: value,
+        [fieldKey!]: value,
         [labelKey]: text
       })
     } else {
-      formGroup.actions.changeField(fieldKey, value)
+      formGroup.actions.changeField(fieldKey!, value)
     }
   }
 
@@ -89,17 +92,13 @@ export class BaseWidget extends React.Component<FieldPropsT> {
 
   /** 获取 Input 属性 */
   getInputProps () {
-    const { placeholder, disabled } = this.props
+    const { disabled } = this.props
     const inputPros = {
       className: 'fok-form-item-input-control',
       value: this.getValue(),
       disabled,
       onChange: this._handleChange,
       onBlur: this._handleBlur
-    }
-
-    if (placeholder) {
-      inputPros.placeholder = placeholder
     }
 
     return inputPros

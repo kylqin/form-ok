@@ -1,3 +1,46 @@
-.fok-form-item {
+.fok-form-input-set {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -20px;
 
+  .fok-form-item {
+    display: flex;
+    margin: 6px 0;
+
+    &.fok-form-item-vertical {
+      flex-direction: column;
+      margin: 2px 0;
+
+      .fok-form-item-label {
+        text-align: left;
+        width: 100%;
+        padding: 2px 0;
+      }
+    }
+
+    .fok-form-item-label {
+      width: 180px;
+      text-align: right;
+      padding: 5px;
+
+      .fok-form-item-required {
+        color: orangered;
+      }
+
+      .fok-form-item-tooltip {
+        padding: 0 2px;
+        color: forestgreen;
+      }
+    }
+
+    .fok-form-item-control-errors-wrapper {
+      flex-grow: 1;
+      text-align: left;
+
+      .fok-form-item-errors {
+        color: red;
+      }
+
+    }
+  }
 }

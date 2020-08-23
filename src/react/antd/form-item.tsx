@@ -1,4 +1,4 @@
-import { FieldPropsT } from '@/core/types'
+import { FieldPropsT } from '/@/core/types'
 import { QuestionCircleOutlined } from '@ant-design/icons'
 import { Tooltip } from 'antd'
 import React from 'react'
@@ -14,46 +14,34 @@ export function FormItem (props: { field: FieldPropsT, commonProps: FormCommonPr
   if (tooltip) {
     tooltipComponent = (
       <Tooltip placement='bottom' title={tooltip}><QuestionCircleOutlined /></Tooltip>
-      // <Tooltip placement='bottom' title={tooltip}>hello</Tooltip>
     )
   }
 
   let itemClassName = `fok-form-item fok-form-item-col-span-${span}`
-  let style = { dispaly: hidden ? 'none' : '', width: `calc(${100 / column * span}% - ${gap}px)`, marginRight: `${gap}px` }
-  const feedbackStyle = {}
+  let style = { display: hidden ? 'none' : '', width: `${100 / column * span}%`, paddingRight: `${gap}px` }
 
+  let colon = ':'
   if (vertical) {
     itemClassName += ' fok-form-item-vertical'
-    return <div className={itemClassName} style={style} dataKey={fieldKey}>
-      <label className='fok-form-item-label'>
-        <b className='fok-form-item-required'>{(required && !readonly && widget !== 'text') ? '*' : ''}</b>
-        <span>
-          {title}
-          {tooltip && <span className='fok-form-item-tooltip'>{tooltipComponent}</span>}
-        </span>
-      </label>
-      <div className='fok-form-item-control-container'>{children}</div>
-      <div className='fok-form-item-errors'>
-        {!disabled && !readonly && !!errors.length && errors.map(err => {
-          return <small className='fok-form-item-error' key={err.message} title={err.message}>{err.message}</small>
-        })}
-      </div>
-    </div>
-  } else {
-    return <div className={itemClassName} style={style} dataKey={fieldKey}>
-      <label className='fok-form-item-label'>
-        <b className='fok-form-item-required'>{(required && !readonly && widget !== 'text') ? '*' : ''}</b>
-        <span>
-          {title}
-          {tooltip && <span className='fok-form-item-tooltip'>{tooltipComponent}</span>}
-        </span>
-      </label>
-      <div className='fok-form-item-control-container'>{children}</div>
-      <div className='fok-form-item-errors'>
-        {!disabled && !readonly && !!errors.length && errors.map(err => {
-          return <small className='fok-form-item-error' key={err.message} title={err.message}>{err.message}</small>
-        })}
-      </div>
-    </div>
+    colon = ''
   }
+
+  return <div className={itemClassName} style={style} data-key={fieldKey}>
+    <label className='fok-form-item-label'>
+      <b className='fok-form-item-required'>{(required && !readonly && widget !== 'text') ? '*' : ''}</b>
+      <span>
+        {title}
+        {tooltip && <span className='fok-form-item-tooltip'>{tooltipComponent}</span>}
+      </span>
+      {colon}
+    </label>
+    <div className='fok-form-item-control-errors-wrapper'>
+      <div className='fok-form-item-control-container'>{children}</div>
+      <div className='fok-form-item-errors'>
+        {!disabled && !readonly && !!errors.length && errors.map(err => {
+          return <small className='fok-form-item-error' key={err.message} title={err.message}>{err.message}</small>
+        })}
+      </div>
+    </div>
+  </div>
 }

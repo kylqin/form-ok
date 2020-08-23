@@ -14,11 +14,11 @@ export class ActionsT {
 
   newField (field: FieldDefineT) {}
 
-  changeField (key: string, value: any, actionId: string) {
+  changeField (key: string, value: any, actionId?: string) {
     actionChangeField(this, this.formGroup, key, value, actionId)
   }
 
-  changeFields (changeMap: PlainObject, actionId: string) {
+  changeFields (changeMap: PlainObject, actionId?: string) {
     actionChangeFields(this, this.formGroup, changeMap, actionId)
   }
 
@@ -52,7 +52,7 @@ function actionNewField (actions: ActionsT, formGroup: FormGroup, field: FieldDe
 }
 
 /** changeField 改变 field 的 value 值 */
-function actionChangeField (actions: ActionsT, formGroup: FormGroup, key: string, value: any, actionId: string) {
+function actionChangeField (actions: ActionsT, formGroup: FormGroup, key: string, value: any, actionId?: string) {
   // 改变 data
   formGroup.updateData(key, value)
 
@@ -60,7 +60,7 @@ function actionChangeField (actions: ActionsT, formGroup: FormGroup, key: string
 }
 
 /** changeFields 根据 keyValueMap 改变 field 的 value */
-function actionChangeFields (actions: ActionsT, formGroup: FormGroup, keyValueMap: PlainObject, actionId: string) {
+function actionChangeFields (actions: ActionsT, formGroup: FormGroup, keyValueMap: PlainObject, actionId?: string) {
   const keys = Object.keys(keyValueMap)
   // const values = []
   // 改变 data
@@ -72,7 +72,7 @@ function actionChangeFields (actions: ActionsT, formGroup: FormGroup, keyValueMa
 }
 
 /** trigger onChange events & validation & watch */
-function actionUtilTrigger (actions: ActionsT, formGroup: FormGroup, key: string|string[], actionId: string) {
+function actionUtilTrigger (actions: ActionsT, formGroup: FormGroup, key: string|string[], actionId?: string) {
   // TODO: 触发 onChange 事件 吗？
   // 触发 watch
   actionUtilTriggerWatch(actions, formGroup, key, actionId)
@@ -84,7 +84,7 @@ function actionUtilTrigger (actions: ActionsT, formGroup: FormGroup, key: string
 
 
 /** 触发 watch */
-function actionUtilTriggerWatch (actions: ActionsT, formGroup: FormGroup, key: string|string[], actionId: string) {
+function actionUtilTriggerWatch (actions: ActionsT, formGroup: FormGroup, key: string|string[], actionId?: string) {
   const watchers = formGroup.fieldWatchers(key)
   watchers.forEach(watcher => {
     actions._taskManager.add(() => watcher.handler(...watcher.values, { actionId, key, formGroup }))

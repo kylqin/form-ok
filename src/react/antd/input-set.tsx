@@ -1,5 +1,6 @@
 import React from 'react'
-import { BoxItem } from './combinations/box'
+import { BoxWidget } from './combinations/box'
+import { ArrayWidget } from './combinations/array'
 import { FormItem } from './form-item'
 import { WidgetMap } from './widget-map'
 
@@ -16,16 +17,11 @@ export type FormCommonPropsExtT = FormCommonPropsT & {
 }
 
 function createBoxComponent (field: FieldPropsT, commonProps: FormCommonPropsExtT) {
-  return <BoxItem key={field.fieldKey!} field={field} commonProps={commonProps} />
+  return <BoxWidget key={field.fieldKey!} field={field} commonProps={commonProps} />
 }
-function createGroupComponent (field: FieldPropsT, commonProps: FormCommonPropsExtT) {
-  return <BoxItem key={field.fieldKey!} field={field} commonProps={commonProps} />
-}
-function createObjectComponent (field: FieldPropsT, commonProps: FormCommonPropsExtT) {
-  return <BoxItem key={field.fieldKey!} field={field} commonProps={commonProps} />
-}
+
 function createArrayComponent (field: FieldPropsT, commonProps: FormCommonPropsExtT) {
-  return <BoxItem key={field.fieldKey!} field={field} commonProps={commonProps} />
+  return <ArrayWidget key={field.fieldKey!} field={field} commonProps={commonProps} />
 }
 
 export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsExtT) {
@@ -40,13 +36,9 @@ export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsEx
     // console.log('fieldProps ->', fieldProps)
     switch (field.widget) {
       case 'box':
-        Comp = createBoxComponent(fieldProps, commonProps)
-        break;
       case 'group':
-        Comp = createGroupComponent(fieldProps, commonProps)
-        break;
       case 'object':
-        Comp = createObjectComponent(fieldProps, commonProps)
+        Comp = createBoxComponent(fieldProps, commonProps)
         break;
       case 'array':
         Comp = createArrayComponent(fieldProps, commonProps)

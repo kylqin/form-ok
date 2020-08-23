@@ -19,18 +19,22 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
       value: props.value
     }
 
+    // console.log('BW constructor', props.fieldKey, props.value)
     this._handleChange = this.handleChange.bind(this)
     this._handleBlur = this.handleBlur.bind(this)
   }
 
   componentDidMount () {
     const { commonProps, fieldKey, value } = this.props
+    // const newProps = commonProps.propsGetter!(commonProps.formGroup.field(fieldKey!)!)
+    // console.log('BW componentDidMount', fieldKey, value, commonProps.formGroup.fields(null))
     this.setState({
-      value: useListenState(this, commonProps.formGroup, fieldKey!, 'value', value)
+      value: useListenState(this, commonProps.formGroup, fieldKey!, 'value', commonProps.formGroup.field(fieldKey!)!.value)
     })
   }
 
   componentWillUnmount () {
+    // console.log('BW componentWillUnmount', this.props.fieldKey, this.props.value)
     // 去掉 useListenState
     for (const l of this.listenersToRemove) {
       this.props.commonProps.formGroup.eventBus.remove(l[0], l[1])

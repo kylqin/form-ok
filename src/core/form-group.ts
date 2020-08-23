@@ -93,7 +93,7 @@ export class FormGroup {
 
   field (key: string) { return utilGetFields(this.__fieldMap, this.__dataSet, [key])[0] }
 
-  fields (keys: null|string[]): (FieldExtT|null)[] {
+  fields (keys: null|string[] = null): (FieldExtT|null)[] {
     if (keys) {
       return utilGetFields(this.__fieldMap, this.__dataSet, keys)
     } else {
@@ -182,6 +182,9 @@ const RegArrProp = /^(\w+)\[\d+\]\.(.+)$/
 /** 数组项: [1] = arr.ay; [2] = index|''; [3] = subProp */
 const RegArrPropWithIndex = /^([\w.]+)\[(\d*)\]\.(.+)$/
 
+/** 数组项: [1] = arr.ay; [2] = index|''; [3] = subProp */
+const RegArrPropWithoutIndex = /^([\w.]+)\[\]\.(.+)$/
+
 /** 解析数组项的 key:  key => [isArrProp, arr.ay.key, index|'', sub.prop.key] */
 function utilPraseArrProp (key: string) {
   const matched = key.match(RegArrPropWithIndex)
@@ -189,6 +192,10 @@ function utilPraseArrProp (key: string) {
     return [true, matched[1], matched[2], matched[3]]
   }
   return [false]
+}
+
+function utilIsEmptyArrProp (key: string) {
+  return RegArrPropWithoutIndex.test(key)
 }
 
 /** 转换数组项的 key: key1[3].key2[1].key3 => key1[].key2[].key3 */
@@ -212,6 +219,7 @@ function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, keys: string[]
           toCache.key = key
           toCache.value = _.get(dataSet, key)
           toCache.markNeedSyncValue(false)
+          console.log('toCache ->', toCache)
           // 保存新的的 Field
           fieldMap.set(key, toCache)
           return toCache
@@ -234,10 +242,9 @@ function utilGetAllFields (fieldMap: FieldMap, dataSet: PlainObject): FieldExtT[
   const fieldArr = fieldMap.values()
   const fields = []
 
-  // 去掉 空index[] 数组项 Field
   for (const field of fieldArr) {
-    const [isArrProp, _, index] = utilPraseArrProp(field.key)
-    if (!isArrProp && index === '') {
+    // 去掉 空index[] 数组项 Field
+    if (!utilIsEmptyArrProp(field.key)) {
       field.syncFieldValue(dataSet)
       fields.push(field)
     }
@@ -261,7 +268,7 @@ function utilGetAllFields (fieldMap: FieldMap, dataSet: PlainObject): FieldExtT[
             const fieldKey = `${accKeyPath}[${index}].${subKey}`
             if (!fieldMap.get(fieldKey)) {
               // 不在 fieldMap 中
-              subKeys.push(subKey)
+              subKeys.push(fieldKey)
             }
             walk(item[subKey], fieldKey)
           })

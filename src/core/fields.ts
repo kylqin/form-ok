@@ -171,11 +171,15 @@ export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
       field.key = field.originKey // 同步自动生成的 key
       if (field.labelKey) { field.originLabelKey = field.labelKey }
 
+      console.log('field ->', field)
+
       const parentIsArr = parent && parent.widget === 'array'
 
       if (parentIsArr || (parent && parent.widget === 'object')) {
         // 父亲 widget 为 数组或对象, 处理 key, labelKey, group.key, group.labelKey, 设置 origin{key, labelKey}
         const jointer = parentIsArr ? '[].' : '.'
+
+        console.log('jointer ->', jointer)
 
         field.key = parent!.key + jointer + field.key
         if (field.labelKey) { field.labelKey = parent!.key + jointer + field.labelKey }
@@ -191,23 +195,23 @@ export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
             ;(field.group as any).__ok_keyIsNormalized = true
           }
         }
+      }
 
-        if (field.widget === 'object' || field.widget === 'array') {
-          // 递归
-          walk(field.properties || [], field)
-        }
+      if (field.widget === 'object' || field.widget === 'array') {
+        // 递归
+        walk(field.properties || [], field)
+      }
 
-        if (field.widget === 'box' || field.widget === 'group') {
-          // box/group 不贡献 key， 递归
-          walk(field.properties || [], parent)
-        }
+      if (field.widget === 'box' || field.widget === 'group') {
+        // box/group 不贡献 key， 递归
+        walk(field.properties || [], parent)
       }
 
       return field
     })
   }
 
-  const flattened =flattenNoTitleGroups(fields)
+  const flattened = flattenNoTitleGroups(fields)
 
   walk(flattened)
 

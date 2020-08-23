@@ -27,7 +27,7 @@ export function useListen (formGroup: FormGroup, key: string, prop: string, init
 
 export function useListenState (comp: BaseWidget, formGroup: FormGroup, key: string, prop: string, initialValue: any) {
   const updateVal = () => {
-    console.log('uselistenState event bus ->', key, prop)
+    console.log('uselistenState event bus ->', key, prop, (formGroup.field(key)! as any)[prop])
     comp.setState({
       [prop]: (formGroup.field(key)! as any)[prop]
     })

@@ -1,13 +1,13 @@
 import _ from 'lodash';
-import { normalizeFields } from './fields';
+import { normalizeFields, isGroupWithoutTitle } from './fields';
 import { createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
-import { isPlain } from './utils';
+import { isPlain, utilIsArrPropPath, utilEmptyArrPropPath, utilIsEmptyArrPropPath } from './utils';
 import { MultiValidatorDefineT, ValidateCombine } from './validation';
 import { ActionsT } from './actions';
 import { EventBus } from './events'
 
 type WatcherTriggerInfo = {
-  key?: string,
+  path?: string,
   formGroup: FormGroup,
   actionId?: string
 }
@@ -87,23 +87,23 @@ export class FormGroup {
   set error (error: PlainObject) { this.__errSet = error }
   get allow () { return this.__allow }
 
-  updateData (key: string, value: any) { _.set(this.__dataSet, key, value) }
-  updateError (key: string, error: string) { this.__errSet[key] = error }
-  updateAllow (key: string, allow: boolean) { this.__allow[key] = allow }
+  updateData (path: string, value: any) { _.set(this.__dataSet, path, value) }
+  updateError (path: string, error: string) { this.__errSet[path] = error }
+  updateAllow (path: string, allow: boolean) { this.__allow[path] = allow }
 
-  field (key: string) { return utilGetFields(this.__fieldMap, this.__dataSet, [key])[0] }
+  field (path: string) { return utilGetFields(this.__fieldMap, this.__dataSet, [path])[0] }
 
-  fields (keys: null|string[] = null): (FieldExtT|null)[] {
-    if (keys) {
-      return utilGetFields(this.__fieldMap, this.__dataSet, keys)
+  fields (paths: null|string[] = null): (FieldExtT|null)[] {
+    if (paths) {
+      return utilGetFields(this.__fieldMap, this.__dataSet, paths)
     } else {
       return utilGetAllFields(this.__fieldMap, this.__dataSet)
     }
   }
 
   // 直接在 field 上更新
-  updateField (key: string, update: (field: FieldExtT) => void, notFund?: () => void) {
-    const [field] = utilGetFields(this.__fieldMap, this.__dataSet, [key])
+  updateField (path: string, update: (field: FieldExtT) => void, notFund?: () => void) {
+    const [field] = utilGetFields(this.__fieldMap, this.__dataSet, [path])
     if (field) {
       update(field)
     } else {
@@ -111,25 +111,25 @@ export class FormGroup {
     }
   }
 
-  fieldValidators (key: null|string|string[]): ValidateCombine[] {
-    const filteredValidators = uitlGetByDeps(key, this.__validatorsMap)
+  fieldValidators (path: null|string|string[]): ValidateCombine[] {
+    const filteredValidators = uitlGetByDeps(path, this.__validatorsMap)
 
     return filteredValidators.map((validator) => {
       return {
         validator,
-        values: validator[0].map((key: string) => _.get(this.__dataSet, key))
+        values: validator[0].map((path: string) => _.get(this.__dataSet, path))
       }
     })
   }
 
-  fieldWatchers (key: string|string[]) {
-    const filteredWatchers: WatcherDefineT[] = uitlGetByDeps(key, this.__watchersMap)
+  fieldWatchers (path: string|string[]) {
+    const filteredWatchers: WatcherDefineT[] = uitlGetByDeps(path, this.__watchersMap)
 
     return filteredWatchers.map(([deps, handler]) => {
       return {
         handler,
-        keys: deps,
-        values: deps.map((key: string) => _.get(this.__dataSet, key))
+        paths: deps,
+        values: deps.map((path: string) => _.get(this.__dataSet, path))
       }
     })
   }
@@ -146,23 +146,23 @@ function utilCreateWatchersMap (watchers: WatcherDefineT[]): WatchersMap {
 function utilCreateMapByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (defines: T[]): DepMap<T> {
   const map = new Map()
   for (const def of defines) {
-    const [keys] = def
-    for (const key of keys) {
-      if (map.has(key)) {
-        map.get(key).push(def)
+    const [paths] = def
+    for (const path of paths) {
+      if (map.has(path)) {
+        map.get(path).push(def)
       } else {
-        map.set(key, [def])
+        map.set(path, [def])
       }
     }
   }
   return map
 }
 
-function uitlGetByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (key: null|string|string[], depMap: Map<string,T[]>): Array<T> {
+function uitlGetByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (path: null|string|string[], depMap: Map<string,T[]>): Array<T> {
     let filteredValidators: T[] = []
-    if (Array.isArray(key)) {
+    if (Array.isArray(path)) {
       const hasIt = new Set() // 用于过滤掉相同的
-      for (const k of key) {
+      for (const k of path) {
         for (const vtor of (depMap.get(k) || [])) {
           if (!hasIt.has(vtor[1])) { // vtor[1], 是函数
             filteredValidators.push(vtor)
@@ -170,67 +170,55 @@ function uitlGetByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (key: nul
           }
         }
       }
-    } else if (key) {
-      filteredValidators = depMap.get(key) || []
+    } else if (path) {
+      filteredValidators = depMap.get(path) || []
     }
     return filteredValidators
 }
 
-/** 数组项: [1] = array; [2] = subProp */
-const RegArrProp = /^(\w+)\[\d+\]\.(.+)$/
-
-/** 数组项: [1] = arr.ay; [2] = index|''; [3] = subProp */
-const RegArrPropWithIndex = /^([\w.]+)\[(\d*)\]\.(.+)$/
-
-/** 数组项: [1] = arr.ay; [2] = index|''; [3] = subProp */
-const RegArrPropWithoutIndex = /^([\w.]+)\[\]\.(.+)$/
-
-/** 解析数组项的 key:  key => [isArrProp, arr.ay.key, index|'', sub.prop.key] */
-function utilPraseArrProp (key: string) {
-  const matched = key.match(RegArrPropWithIndex)
-  if (matched) {
-    return [true, matched[1], matched[2], matched[3]]
-  }
-  return [false]
-}
-
-function utilIsEmptyArrProp (key: string) {
-  return RegArrPropWithoutIndex.test(key)
-}
-
-/** 转换数组项的 key: key1[3].key2[1].key3 => key1[].key2[].key3 */
-function utilEmptyArrProp (key: string) { return key.replace(/\[\d+\]\./g, '[].') }
-
-/** 根据 keys 数组 获取 Field 数组 */
-function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, keys: string[]): (FieldExtT|null)[] {
-  return keys.map(key => {
-    const field = fieldMap.get(key)
+/** 根据 paths 数组 获取 Field 数组 */
+function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, paths: string[]): (FieldExtT|null)[] {
+  return paths.map(path => {
+    const field = fieldMap.get(path)
     if (field) {
       field.syncFieldValue(dataSet)
       return field
     } else {
-      const matched = key.match(RegArrProp)
-      if (matched) { // key: arr[4].porp
+      // 即 数组项
+      if (utilIsArrPropPath(path)) { // path: arr[4].porp
         // 转换: -> arr[].prop
-        const keyWithoutIndex = utilEmptyArrProp(key)
+        const pathWithoutIndex = utilEmptyArrPropPath(path)
         // 为数组项构造新的 Field
-        const toCache = fieldMap.get(keyWithoutIndex)?.clone()
+        const toCache = fieldMap.get(pathWithoutIndex)?.clone()
         if (toCache) {
-          toCache.path = key
-          toCache.value = _.get(dataSet, key)
+          toCache.path = path
+
+          if (toCache.defineLabelKey) {
+            // 如果 有 相应 的 deinfeLableKey, 调整 labelPath
+            toCache.labelPath = path.slice(0, path.length - toCache.defineKey.length) + toCache.defineLabelKey.length
+          }
+
+          if (toCache.group) {
+            // 如果有相应的 group
+            // TODO: 是否创建当前 index 对应的 group
+            // if (isGroupWithoutTitle(propField.group)) {
+            // }
+          }
+
+          toCache.value = _.get(dataSet, path)
           toCache.markNeedSyncValue(false)
           console.log('toCache ->', toCache)
           // 保存新的的 Field
-          fieldMap.set(key, toCache)
+          fieldMap.set(path, toCache)
           return toCache
         } else {
-          // 无效的 key
-          console.warn('utilGetFields 无法获取 Field, 无效的 key:', key)
+          // 无效的 path
+          console.warn('utilGetFields 无法获取 Field, 无效的 path:', path)
           return null
         }
       } else {
-        // 无效的 key
-        console.warn('utilGetFields 无法获取 Field, 无效的 key:', key)
+        // 无效的 path
+        console.warn('utilGetFields 无法获取 Field, 无效的 path:', path)
         return null
       }
     }
@@ -244,33 +232,33 @@ function utilGetAllFields (fieldMap: FieldMap, dataSet: PlainObject): FieldExtT[
 
   for (const field of fieldArr) {
     // 去掉 空index[] 数组项 Field
-    if (!utilIsEmptyArrProp(field.path)) {
+    if (!utilIsEmptyArrPropPath(field.path)) {
       field.syncFieldValue(dataSet)
       fields.push(field)
     }
   }
 
   // 收集数组项
-  const walk = (dataSet: (PlainObject|any[]), accKeyPath: string) => {
+  const walk = (dataSet: (PlainObject|any[]), accPath: string) => {
     if (Array.isArray(dataSet)) {
       const arr = dataSet
       if (!arr.length) {
         return
       }
 
-      const emptiedAccKeyPath = utilEmptyArrProp(accKeyPath)
+      const emptiedAccPath = utilEmptyArrPropPath(accPath)
       arr.forEach((item, index) => {
-        const arrField = fieldMap.get(emptiedAccKeyPath)
+        const arrField = fieldMap.get(emptiedAccPath)
         if (arrField) {
           const subKeys: string[] = []
           ;(arrField.properties || []).forEach(subField => {
-            const subKey = subField.originKey
-            const fieldKey = `${accKeyPath}[${index}].${subKey}`
-            if (!fieldMap.get(fieldKey)) {
+            const subKey = subField.defineKey
+            const path = `${accPath}[${index}].${subKey}`
+            if (!fieldMap.get(path)) {
               // 不在 fieldMap 中
-              subKeys.push(fieldKey)
+              subKeys.push(path)
             }
-            walk(item[subKey], fieldKey)
+            walk(item[subKey], path)
           })
 
           // 获取未找到的 数组项
@@ -278,9 +266,9 @@ function utilGetAllFields (fieldMap: FieldMap, dataSet: PlainObject): FieldExtT[
         }
       })
     } else if (isPlain(dataSet)) {
-      Object.keys(dataSet).forEach(key => {
-        accKeyPath += accKeyPath ? ('.' + key) : key
-        walk(dataSet[key], accKeyPath)
+      Object.keys(dataSet).forEach(path => {
+        accPath += accPath ? ('.' + path) : path
+        walk(dataSet[path], accPath)
       })
     }
   }
@@ -290,7 +278,7 @@ function utilGetAllFields (fieldMap: FieldMap, dataSet: PlainObject): FieldExtT[
   return fields
 }
 
-/** 标准化 Field key, 并创建扁平的 Map<key, FieldExtT> */
+/** 标准化 Field path, 并创建扁平的 Map<path, FieldExtT> */
 function uitlCreateNormalizedFieldsWithFlattenedMap (fields: FieldDefineT[]): [FieldExtT[], FieldMap] {
   const normalized = normalizeFields(fields)
   console.log('normalized Fields ->', normalized)
@@ -298,7 +286,7 @@ function uitlCreateNormalizedFieldsWithFlattenedMap (fields: FieldDefineT[]): [F
   return [normalized, flattened]
 }
 
-/** 创建扁平的 Map<key, FieldExtT> */
+/** 创建扁平的 Map<path, FieldExtT> */
 function uitlCreateFieldMap (fields: FieldExtT[]) : FieldMap {
   const labelKeys: string[] = []
   const flatten = (fields: FieldExtT[]): FieldExtT[] => {
@@ -307,8 +295,8 @@ function uitlCreateFieldMap (fields: FieldExtT[]) : FieldMap {
       .flatMap(field => {
         if (field.properties) {
           return [field, ...flatten(field.properties)]
-        } else if (field.labelKey) {
-          labelKeys.push(field.labelKey) // 记录 labelKey, 不直接添加
+        } else if (field.labelPath) {
+          labelKeys.push(field.labelPath) // 记录 labelPath, 不直接添加
           return [field]
         } else {
           return [field]
@@ -321,10 +309,10 @@ function uitlCreateFieldMap (fields: FieldExtT[]) : FieldMap {
     map.set(field.path, field)
   })
 
-  // 判断是否添加自动生成的 labelKey Field
-  for (const labelKey of labelKeys) {
-    if (!map.has(labelKey)) {
-      map.set(labelKey, createFieldExt({ path: labelKey } as FieldDefineT))
+  // 判断是否添加自动生成的 labelPath Field
+  for (const labelPath of labelKeys) {
+    if (!map.has(labelPath)) {
+      map.set(labelPath, createFieldExt({ path: labelPath } as FieldDefineT))
     }
   }
 

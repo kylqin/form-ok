@@ -23,16 +23,16 @@ export type ValidateCombine = {
   values: any[]
 }
 
-// type PenddingAsyncValidatorT = { fieldKey: string, exec: AsyncValidatorT }
+// type PenddingAsyncValidatorT = { path: string, exec: AsyncValidatorT }
 
 /** Async Validation */
 // const AsyncValidators = {
 //   current: [],
 //   clear: () => { AsyncValidators.current = [] },
-//   add: (asyncValidator: AsyncValidatorT, fieldKey: string) => {
-//     // 替换重复的 fieldKey
-//     _.remove(AsyncValidators.current, v => v.fieldKey === fieldKey)
-//     AsyncValidators.current.push({ fieldKey, exec: asyncValidator })
+//   add: (asyncValidator: AsyncValidatorT, path: string) => {
+//     // 替换重复的 path
+//     _.remove(AsyncValidators.current, v => v.path === path)
+//     AsyncValidators.current.push({ path, exec: asyncValidator })
 //   },
 //   validate: () => {
 //     const current = AsyncValidators.current
@@ -44,16 +44,16 @@ export type ValidateCombine = {
 export type ValidateOptions = {
   ignoreRequired: boolean,
   validatorMap: {
-    [key: string]: FokValidatorT
+    [path: string]: FokValidatorT
   }
 }
 
 const defaultValidateOptions = { ignoreRequired: false, validatorMap: {} }
 
 /** Validate a single Field */
-export function validateField (validators: FokValidatorDefineT[], value: any, key: string, validateOptions: ValidateOptions = defaultValidateOptions)
+export function validateField (validators: FokValidatorDefineT[], value: any, path: string, validateOptions: ValidateOptions = defaultValidateOptions)
   : Promise<string> {
-    console.log('validate Field ->', key, value)
+    console.log('validate Field ->', path, value)
   //是否必填
   const _validators = validators.filter(v => v !== 'required')
   const required = _validators.length < validators.length
@@ -85,7 +85,7 @@ export function validateField (validators: FokValidatorDefineT[], value: any, ke
         validator = validatorMap[validator]
       }
       if (!validator) {
-        throw Error(`Invalid validator Item ${idx} for Field ${key}`)
+        throw Error(`Invalid validator Item ${idx} for Field ${path}`)
       }
 
 
@@ -125,7 +125,7 @@ export function validateFields (validators: MultiValidatorDefineT[], values: any
     let message: string = ''
     let asyncValidators = []
     for (const validatorDefine of validators) {
-      const [keys, validator, type] = validatorDefine
+      const [paths, validator, type] = validatorDefine
       if (type === 'async') {
         // 异步验证
         asyncValidators.push(validator)

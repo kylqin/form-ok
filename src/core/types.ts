@@ -30,7 +30,7 @@ export type FieldTypeT = 'number' | 'string' | 'boolean' | 'object' | 'array' | 
 export class FieldT {
   constructor(
     public path: string = '',
-    public labelKey?: string,
+    public labelPath?: string,
 
     public title: string = '',
     public value?: any,
@@ -49,14 +49,17 @@ export class FieldT {
   ) {}
 }
 
-export function createField ({ key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties }: { [key: string]: any }) {
-  return new FieldT(key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
+export function createField ({ path, labelPath, title, value, errors, required, validators, type, enums, widget, attrs, properties }: { [path: string]: any }) {
+  return new FieldT(path, labelPath, title, value, errors, required, validators, type, enums, widget, attrs, properties)
 }
 
 export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
   const { path, key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, /** */readonly, ...restProps } = fieldDefine
   const extField = new FieldExtT(path || key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
   const restPropNames = Object.keys(restProps)
+
+  // 设置 defineKey
+  extField.defineKey = key
 
   extField.readonly = readonly
   extField.exts = restProps
@@ -69,17 +72,14 @@ export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
     return acc
   }, {})
 
-  // 设置 originKey
-  extField.originKey = key
-
   return extField
 }
 
 export type OnChangeCallbackT = (value: any, text: string, formGroup: FormGroup) => void
 
 export class FieldExtT extends FieldT {
-  public originKey!: string
-  public originLabelKey?: string
+  public defineKey!: string
+  public defineLabelKey?: string
   public group?: FieldExtT
   public parent?: FieldExtT
 
@@ -118,7 +118,6 @@ export class FieldExtT extends FieldT {
 // }
 export class FieldPropsT extends FieldExtT {
   public text: string = ''
-  public fieldKey?: string = ''
   public disabled?: boolean
   public hidden?: boolean
   public tooltip?: string
@@ -136,5 +135,6 @@ export class FieldPropsT extends FieldExtT {
 
 export interface FieldDefineT extends FieldExtT {
   key: string,
-  [key: string]: any
+  labelKey?: string,
+  [path: string]: any
 }

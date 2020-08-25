@@ -12,19 +12,19 @@ export type FormCommonPropsT = {
   propsGetter?: PropsGetter
 }
 
-const genKey = () => genID('__key_')
+const genPath = () => genID('__path_')
 
-/** 让计算属性函数中 对数据的访问可以通过 ds['.key'], ds['key.subKey'], ds['arr[3].subKey'] 的语法进行访问 */
+/** 让计算属性函数中 对数据的访问可以通过 ds['.path'], ds['path.subPath'], ds['arr[3].subPath'] 的语法进行访问 */
 const genGetProxy = (dp: { data: PlainObject }, field: FieldExtT, parent?: FieldExtT) => {
   return new Proxy(dp.data, {
-    get (dataSet, key: string) {
-      return key[0] !== '.' // 'key', 'book.mark'
-        ? _.get(dataSet, key) // '.key', '.book.mark'
+    get (dataSet, path: string) {
+      return path[0] !== '.' // 'path', 'book.mark'
+        ? _.get(dataSet, path) // '.path', '.book.mark'
         : !parent
-          ? _.get(dataSet, key.slice(1)) // 无父亲，退化为 'key', 'book.mark'
-          : parent.widget === 'array' // 父亲是数组: 'parent[idx].key', 'parent[idx].book.mark'
-            ? _.get(dataSet, field.path.slice(0, field.path.length - field.originKey.length - 1) + key) // 替换 origin key 部分, key 是带`.` 的
-            : _.get(dataSet, parent.path + key) // 父亲是对象: 'parent.key', 'parent.book.mark'
+          ? _.get(dataSet, path.slice(1)) // 无父亲，退化为 'path', 'book.mark'
+          : parent.widget === 'array' // 父亲是数组: 'parent[idx].path', 'parent[idx].book.mark'
+            ? _.get(dataSet, field.path.slice(0, field.path.length - field.defineKey.length - 1) + path) // 替换 origin path 部分, path 是带`.` 的
+            : _.get(dataSet, parent.path + path) // 父亲是对象: 'parent.path', 'parent.book.mark'
     }
   })
 }
@@ -81,11 +81,8 @@ function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT): Field
   setComputeProps(copied, commonProps)
   setUIProps(copied, commonProps)
 
-  // 设置 fieldKey
-  copied.fieldKey = copied.path
-
   // 设置 text
-  copied.text = copied.labelKey ? _.get(formGroup.data, copied.labelKey) : ''
+  copied.text = copied.labelPath ? _.get(formGroup.data, copied.labelPath) : ''
 
   // 全局 readonly 覆盖
   copied.readonly = readonly || copied.readonly
@@ -135,7 +132,7 @@ function flattenNoTitleGroups (fields: FieldDefineT[], parent?: FieldDefineT): F
       // copied is an group without title
 
       // 标记是否已经标准化: 在 normalizeFields 中使用, 因为 无标题组，在其中会被多次访问到，此标记第一次访问后 设置为 true
-      (copied as any).__ok_keyIsNormalized = false
+      (copied as any).__ok_pathIsNormalized = false
 
       const properties = flattenNoTitleGroups(copied.properties || [], parent)
 
@@ -160,39 +157,39 @@ function flattenNoTitleGroups (fields: FieldDefineT[], parent?: FieldDefineT): F
   return copiedFields
 }
 
-/** 标准化 field 的 key 属性，使之在整棵 fields 树中 唯一，即: 对象属性(parent.key), 数组属性(array[].key)*/
-/** 设置 originKey, compute, 建立 树结构关系, group/parent */
+/** 标准化 field 的 path 属性，使之在整棵 fields 树中 唯一，即: 对象属性(parent.path), 数组属性(array[].path)*/
+/** 设置 defineKey, compute, 建立 树结构关系, group/parent */
 export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
   const walk = (fields: FieldDefineT[], parent?: FieldExtT) => {
     fields.forEach(field => {
       // 直接在 field 上修改， 因为 flattenNotTitleGroups 返回的是副本
 
-      field.originKey = field.path || genKey() // 自动生成 key, 并保存至 originKey
-      field.path = field.originKey // 同步自动生成的 key
-      if (field.labelKey) { field.originLabelKey = field.labelKey }
+      field.defineKey = field.path || genPath() // 自动生成 path, 并保存至 defineKey
+      field.path = field.defineKey // 同步自动生成的 path
+      if (field.labelPath) { field.defineLabelKey = field.labelPath }
 
       // console.log('field ->', field)
 
       const parentIsArr = parent && parent.widget === 'array'
 
       if (parentIsArr || (parent && parent.widget === 'object')) {
-        // 父亲 widget 为 数组或对象, 处理 key, labelKey, group.key, group.labelKey, 设置 origin{key, labelKey}
+        // 父亲 widget 为 数组或对象, 处理 path, labelPath, group.path, group.labelPath, 设置 origin{path, labelPath}
         const jointer = parentIsArr ? '[].' : '.'
 
         // console.log('jointer ->', jointer)
 
         field.path = parent!.path + jointer + field.path
-        if (field.labelKey) { field.labelKey = parent!.path + jointer + field.labelKey }
+        if (field.labelPath) { field.labelPath = parent!.path + jointer + field.labelPath }
 
         if (field.group && isGroupWithoutTitle(field.group)) {
           // 无标题组 也要处理
-          if (!(field.group as any).__ok_keyIsNormalized) {
+          if (!(field.group as any).__ok_pathIsNormalized) {
             // 避免重复处理
-            field.group.originKey = field.group.path || genKey()
-            field.group.path = field.group.originKey
+            field.group.defineKey = field.group.path || genPath()
+            field.group.path = field.group.defineKey
 
             field.group.path = parent!.path + jointer + field.group.path
-            ;(field.group as any).__ok_keyIsNormalized = true
+            ;(field.group as any).__ok_pathIsNormalized = true
           }
         }
       }
@@ -203,7 +200,7 @@ export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
       }
 
       if (field.widget === 'box' || field.widget === 'group') {
-        // box/group 不贡献 key， 递归
+        // box/group 不贡献 path， 递归
         walk(field.properties || [], parent)
       }
 

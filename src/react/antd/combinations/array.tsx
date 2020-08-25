@@ -1,7 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react'
 import { FormCommonPropsExtT, renderCtrls } from '../input-set'
 import { ContentBox } from './content-box'
-import { isGroupWithoutTitle } from '/@/core/fields'
 import { FieldPropsT } from '/@/core/types'
 import { genID } from '/@/core/utils'
 
@@ -16,9 +15,9 @@ function useArrayIds (count: number) {
   const [ids, setIds] = useState<string[]>(initialized || setInitialized(true) || new Array(count).fill(true).map(() => createArrayItemId()))
   const actions = useMemo(() => {
     return {
-      insert: (idx: number) => { setIds(ids => insert(ids, idx, createArrayItemId())) },
-      remove: (idx: number) => { setIds(ids => remove(ids, idx)) },
-      push: (idx: number) => { setIds(ids => push(ids, createArrayItemId())) },
+      insert: (idx: number) => { setIds((ids: string[]) => insert(ids, idx, createArrayItemId())) },
+      remove: (idx: number) => { setIds((ids: string[]) => remove(ids, idx)) },
+      push: () => { setIds((ids: string[]) => push(ids, createArrayItemId())) },
     }
   },
   [])
@@ -27,7 +26,7 @@ function useArrayIds (count: number) {
 }
 
 export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommonPropsExtT }) => {
-  const { value, readonly, disabled, hidden, fieldKey, title, properties } = props.field
+  const { value, readonly, disabled, hidden, path, title, properties } = props.field
   const { commonProps } = props
 
   const [valueArr, setValueArr] = useState(value || [])
@@ -39,9 +38,9 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
       insert: (index: number) => {},
       remove: (index: number) => {
         const { formGroup } = commonProps
-        const arr = (formGroup.field(fieldKey!)!.value || []) as any[]
+        const arr = (formGroup.field(path!)!.value || []) as any[]
         // console.log('arr', arr, index)
-        formGroup.actions.changeField(fieldKey!, remove(arr, index), 'arr')
+        formGroup.actions.changeField(path!, remove(arr, index), 'arr')
       },
       push: () => {}
     }
@@ -49,16 +48,7 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
 
   if (hidden) { return <div /> }
 
-  // const _properties = properties.map(field => {
-  //   return {
-  //     ...field,
-  //     hidden: hidden || field.hidden,
-  //     readonly: readonly || field.readonly,
-  //     disabled: disabled || field.disabled
-  //   }
-  // })
-
-  return <div key={fieldKey} className='fok-form-item-combination fok-form-item-combination-box'>
+  return <div key={path} className='fok-form-item-combination fok-form-item-combination-box'>
     <ContentBox title={title}>
       {ids.map((id: string, idx: number) => <ArrayItemWidget arrField={props.field} commonProps={commonProps} id={id} index={idx} key={id} />)}
       <span onClick={() => idsActions.push()}>Add</span>
@@ -69,29 +59,17 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
 }
 
 const ArrayItemWidget = (props: { arrField: FieldPropsT, commonProps: FormCommonPropsExtT, id: string, index: number }) => {
-  const { readonly, disabled, hidden, fieldKey, title, properties } = props.arrField
+  const { readonly, disabled, hidden, path, title, properties } = props.arrField
   const { commonProps, id, index } = props
   const jointer = '[' + index + '].'
-  const _properties = properties.map(propField => {
-    const newPropField = {
-      ...propField,
-      path: fieldKey + jointer + propField.originKey
-    }
-
-    if (propField.labelKey) {
-      newPropField.labelKey = fieldKey + jointer + propField.originLableKey
-    }
-
-    if (propField.group) {
-      if (isGroupWithoutTitle(propField.group)) {
-        newPropField.group.path = fieldKey + jointer + propField.group.originKey
-      }
-    }
+  const _properties = properties!.map(propField => {
+    const newPath = path + jointer + propField.defineKey
+    const newPropField = commonProps.formGroup.field(newPath)!
     return newPropField
   })
   // console.log('_properties ->', _properties)
 
-  return <div className='' style={{ display: 'flex', flexWrap: 'wrap' }} date-key={fieldKey + jointer}>
+  return <div className='' style={{ display: 'flex', flexWrap: 'wrap' }} date-key={path + jointer}>
     {id}
     {renderCtrls(_properties, commonProps)}
   </div>

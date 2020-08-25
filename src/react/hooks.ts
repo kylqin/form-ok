@@ -10,31 +10,31 @@ export function useFormGroup (schema: FormGroupSchema, initialData: PlainObject 
   return formGroup
 }
 
-export function useListen (formGroup: FormGroup, key: string, prop: string, initialValue: any) {
+export function useListen (formGroup: FormGroup, path: string, prop: string, initialValue: any) {
   const [val, setVal] = useState(initialValue)
 
   useEffect(() => {
     const updateVal = () => {
-      // console.log('event bus ->', key, prop)
-      setVal((formGroup.field(key)! as any)[prop])
+      // console.log('event bus ->', path, prop)
+      setVal((formGroup.field(path)! as any)[prop])
     }
 
-    formGroup.eventBus.add(key, updateVal)
-    return () => { formGroup.eventBus.remove(key, updateVal)}
-  }, [key])
+    formGroup.eventBus.add(path, updateVal)
+    return () => { formGroup.eventBus.remove(path, updateVal)}
+  }, [path])
   return val
 }
 
-export function useListenState (comp: BaseWidget, formGroup: FormGroup, key: string, prop: string, initialValue: any) {
+export function useListenState (comp: BaseWidget, formGroup: FormGroup, path: string, prop: string, initialValue: any) {
   const listenersToRemove: [string, () => void][] = []
   const updateVal = () => {
-    console.log('uselistenState event bus ->', key, prop, (formGroup.field(key)! as any)[prop])
+    console.log('uselistenState event bus ->', path, prop, (formGroup.field(path)! as any)[prop])
     comp.setState({
-      [prop]: (formGroup.field(key)! as any)[prop]
+      [prop]: (formGroup.field(path)! as any)[prop]
     })
   }
-  listenersToRemove.push([key, updateVal])
-  formGroup.eventBus.add(key, updateVal)
+  listenersToRemove.push([path, updateVal])
+  formGroup.eventBus.add(path, updateVal)
 
   return () => {
       for (const l of listenersToRemove) {

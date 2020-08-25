@@ -14,26 +14,26 @@ export class ActionsT {
 
   newField (field: FieldDefineT) {}
 
-  changeField (key: string, value: any, actionId?: string) {
-    console.log('changeField ->', key, value, actionId)
-    actionChangeField(this, this.formGroup, key, value, actionId)
+  changeField (path: string, value: any, actionId?: string) {
+    console.log('changeField ->', path, value, actionId)
+    actionChangeField(this, this.formGroup, path, value, actionId)
   }
 
   changeFields (changeMap: PlainObject, actionId?: string) {
     actionChangeFields(this, this.formGroup, changeMap, actionId)
   }
 
-  deleteFeild (key: string) {}
+  deleteFeild (path: string) {}
 
-  setError (key: string, message: string) {
-    console.log('setError ->', key, message)
-    this.formGroup.updateField(key, (field: FieldExtT) => {
+  setError (path: string, message: string) {
+    console.log('setError ->', path, message)
+    this.formGroup.updateField(path, (field: FieldExtT) => {
       field.errors = [{ message: message }]
     })
   }
 
-  deleteError (key: string) {
-    this.formGroup.updateField(key, (field: FieldExtT) => {
+  deleteError (path: string) {
+    this.formGroup.updateField(path, (field: FieldExtT) => {
       field.errors = []
     })
   }
@@ -43,8 +43,8 @@ export class ActionsT {
   submit (type: 'validate|ignoreRequired|force') {}
   submitDone () {}
 
-  validate (key: null|string|string[], validateOptions: ValidateOptions) {
-    return actionValidate(this, this.formGroup, key, validateOptions)
+  validate (path: null|string|string[], validateOptions: ValidateOptions) {
+    return actionValidate(this, this.formGroup, path, validateOptions)
   }
 
   // _triggerWatch
@@ -62,70 +62,70 @@ function actionNewField (actions: ActionsT, formGroup: FormGroup, field: FieldDe
 }
 
 /** changeField 改变 field 的 value 值 */
-function actionChangeField (actions: ActionsT, formGroup: FormGroup, key: string, value: any, actionId?: string) {
+function actionChangeField (actions: ActionsT, formGroup: FormGroup, path: string, value: any, actionId?: string) {
   // 改变 data
-  formGroup.updateData(key, value)
-  formGroup.updateField(key, field => {
+  formGroup.updateData(path, value)
+  formGroup.updateField(path, field => {
     field.markNeedSyncValue()
   })
 
-  actionUtilTrigger(actions, formGroup, key, actionId)
+  actionUtilTrigger(actions, formGroup, path, actionId)
 }
 
-/** changeFields 根据 keyValueMap 改变 field 的 value */
-function actionChangeFields (actions: ActionsT, formGroup: FormGroup, keyValueMap: PlainObject, actionId?: string) {
-  const keys = Object.keys(keyValueMap)
+/** changeFields 根据 pathValueMap 改变 field 的 value */
+function actionChangeFields (actions: ActionsT, formGroup: FormGroup, pathValueMap: PlainObject, actionId?: string) {
+  const paths = Object.paths(pathValueMap)
   // const values = []
   // 改变 data
-  keys.forEach(key => {
-    formGroup.updateData(key, keyValueMap[key])
-    formGroup.updateField(key, field => {
+  paths.forEach(path => {
+    formGroup.updateData(path, pathValueMap[path])
+    formGroup.updateField(path, field => {
       field.markNeedSyncValue()
     })
   })
-  actionUtilTrigger(actions, formGroup, keys, actionId)
+  actionUtilTrigger(actions, formGroup, paths, actionId)
 }
 
 /** trigger onChange events & validation & watch */
-function actionUtilTrigger (actions: ActionsT, formGroup: FormGroup, key: string|string[], actionId?: string) {
+function actionUtilTrigger (actions: ActionsT, formGroup: FormGroup, path: string|string[], actionId?: string) {
   // TODO: 触发 onChange 事件 吗？
   // 触发 watch
-  actionUtilTriggerWatch(actions, formGroup, key, actionId)
+  actionUtilTriggerWatch(actions, formGroup, path, actionId)
   // 触发 validation
-  actionUtilTriggerValidation(actions, key)
+  actionUtilTriggerValidation(actions, path)
 
   // TODO: nextTick 执行 tasks
   Promise.resolve().then(() => {
     // console.log(actions._taskManager)
     actions._taskManager.run()
   }).then(() => {
-    if (typeof key === 'string') {
-      formGroup.eventBus.dispatch(key, {})
+    if (typeof path === 'string') {
+      formGroup.eventBus.dispatch(path, {})
     }
   })
 }
 
 
 /** 触发 watch */
-function actionUtilTriggerWatch (actions: ActionsT, formGroup: FormGroup, key: string|string[], actionId?: string) {
-  const watchers = formGroup.fieldWatchers(key)
+function actionUtilTriggerWatch (actions: ActionsT, formGroup: FormGroup, path: string|string[], actionId?: string) {
+  const watchers = formGroup.fieldWatchers(path)
   watchers.forEach(watcher => {
-    actions._taskManager.add(() => watcher.handler(...watcher.values, { actionId, key, formGroup }))
+    actions._taskManager.add(() => watcher.handler(...watcher.values, { actionId, path, formGroup }))
   })
 }
 
 /** 触发 validation */
-function actionUtilTriggerValidation (actions: ActionsT, key: string|string[]) {
-  actions._taskManager.add(() => actions.validate(key, { ignoreRequired: false, validatorMap: {} })) // TODO: 注册 validatorMap
+function actionUtilTriggerValidation (actions: ActionsT, path: string|string[]) {
+  actions._taskManager.add(() => actions.validate(path, { ignoreRequired: false, validatorMap: {} })) // TODO: 注册 validatorMap
 }
 
 type ActionValidateResultT = [string|string[], string][]
 
-/** 验证 => Promise<[key|key[], message][]> */
+/** 验证 => Promise<[path|path[], message][]> */
 async function actionValidate (
   actions: ActionsT,
   formGroup: FormGroup,
-  key: null|string|string[],
+  path: null|string|string[],
   validatorOptions: ValidateOptions): Promise<ActionValidateResultT> {
   const commonProps: FormCommonPropsT = { formGroup, readonly: false, disabled: false }
   createMemoPropsGetter(commonProps)
@@ -149,15 +149,15 @@ async function actionValidate (
     const validateCombine = async (combine: ValidateCombine): Promise<ActionValidateResultT> => {
       try {
         await validateFields([combine.validator], combine.values);
-        for (const key of combine.validator[0]) {
-          actions.deleteError(key);
+        for (const path of combine.validator[0]) {
+          actions.deleteError(path);
         }
         return [];
       }
       catch (message) {
         console.log('err messge multi', combine.validator[0], message);
-        for (const key_2 of combine.validator[0]) {
-          actions.setError(key_2, message);
+        for (const path_2 of combine.validator[0]) {
+          actions.setError(path_2, message);
         }
         return [[combine.validator[0], message]];
       }
@@ -179,16 +179,16 @@ async function actionValidate (
     }
   }
 
-  if (typeof key === 'string') {
+  if (typeof path === 'string') {
     // 验证 单个 字段
-    const field = formGroup.field(key)
+    const field = formGroup.field(path)
     if (!field) {
       // 找不到 Field
       return []
     }
     const fieldProps = commonProps.propsGetter!(field)
 
-    const combines = formGroup.fieldValidators(key)
+    const combines = formGroup.fieldValidators(path)
 
     if (!combines.length) {
       // 如果没有 组合 验证, 则只执行 Field 自己的验证器
@@ -204,8 +204,8 @@ async function actionValidate (
     }
   } else {
     // 验证 多个字段 / 所有字段
-    const combines = formGroup.fieldValidators(key) // key is null|string[]
-    const fieldPropsArr = formGroup.fields(key).filter(f => f).map(f => commonProps.propsGetter!(f!))
+    const combines = formGroup.fieldValidators(path) // path is null|string[]
+    const fieldPropsArr = formGroup.fields(path).filter(f => f).map(f => commonProps.propsGetter!(f!))
     const validateSingelsResult = await Promise.all(fieldPropsArr.map(validateSingle))
         .then(errors => errors.filter(e => e.length).flatMap(e => e))
     if (combines.length) {

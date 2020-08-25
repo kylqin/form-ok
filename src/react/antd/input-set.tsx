@@ -17,11 +17,11 @@ export type FormCommonPropsExtT = FormCommonPropsT & {
 }
 
 function createBoxComponent (field: FieldPropsT, commonProps: FormCommonPropsExtT) {
-  return <BoxWidget key={field.fieldKey!} field={field} commonProps={commonProps} />
+  return <BoxWidget key={field.path!} field={field} commonProps={commonProps} />
 }
 
 function createArrayComponent (field: FieldPropsT, commonProps: FormCommonPropsExtT) {
-  return <ArrayWidget key={field.fieldKey!} field={field} commonProps={commonProps} />
+  return <ArrayWidget key={field.path!} field={field} commonProps={commonProps} />
 }
 
 export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsExtT) {
@@ -48,7 +48,7 @@ export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsEx
         if (!widgetOptions) {
           throw Error(`Invalid Widget Type ${fieldProps.widget}`)
         }
-        const key = fieldProps.originKey!
+        const key = fieldProps.defineKey!
         // console.log('(commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly')
         // console.log((commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly)
         if ((commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly) {

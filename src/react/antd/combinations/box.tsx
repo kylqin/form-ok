@@ -4,7 +4,7 @@ import { FormCommonPropsExtT, renderCtrls } from '../input-set'
 import { ContentBox } from './content-box'
 
 export const BoxWidget = (props: { field: FieldPropsT, commonProps: FormCommonPropsExtT }) => {
-  const { readonly, disabled, hidden, fieldKey, title, properties } = props.field
+  const { readonly, disabled, hidden, path, title, properties } = props.field
   const { commonProps } = props
 
   if (hidden) { return <div /> }
@@ -18,7 +18,7 @@ export const BoxWidget = (props: { field: FieldPropsT, commonProps: FormCommonPr
     }
   })
 
-  return <div key={fieldKey} className='fok-form-item-combination fok-form-item-combination-box'>
+  return <div key={path} className='fok-form-item-combination fok-form-item-combination-box'>
     <ContentBox title={title}>
       <div className='' style={{ display: 'flex', flexWrap: 'wrap' }}>
         {renderCtrls(_properties, commonProps)}

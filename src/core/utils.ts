@@ -28,3 +28,27 @@ export function clone (source: any, target: any) {
   }
   return target
 }
+
+/** 数组项 path */
+
+/** 数组项: [1] = array; [2] = subProp */
+const RegArrProp = /^(\w+)\[\d+\]\.(.+)$/
+export function utilIsArrPropPath (path: string) { return RegArrProp.test(path) }
+
+/** 数组项: [1] = arr.ay; [2] = ''; [3] = subProp */
+const RegArrPropWithoutIndex = /^([\w.]+)\[\]\.(.+)$/
+export function utilIsEmptyArrPropPath (path: string) { return RegArrPropWithoutIndex.test(path) }
+
+/** 转换数组项的 path: path1[3].path2[1].path3 => path1[].path2[].path3 */
+export function utilEmptyArrPropPath (path: string) { return path.replace(/\[\d+\]\./g, '[].') }
+
+/** 数组项: [1] = arr.ay; [2] = index|''; [3] = subProp */
+// const RegArrPropWithIndex = /^([\w.]+)\[(\d*)\]\.(.+)$/
+/** 解析数组项的 path:  path => [isArrProp, arr.ay.path, index|'', sub.prop.path] */
+// export function utilPraseArrProp (path: string) {
+//   const matched = path.match(RegArrPropWithIndex)
+//   if (matched) {
+//     return [true, matched[1], matched[2], matched[3]]
+//   }
+//   return [false]
+// }

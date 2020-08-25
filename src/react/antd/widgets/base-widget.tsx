@@ -20,30 +20,30 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
       value: props.value
     }
 
-    console.log('BW constructor >>>>', props.fieldKey)
+    console.log('BW constructor >>>>', props.path)
     this._handleChange = this.handleChange.bind(this)
     this._handleBlur = this.handleBlur.bind(this)
   }
 
   componentDidMount () {
-    const { commonProps, fieldKey } = this.props
-    // const newProps = commonProps.propsGetter!(commonProps.formGroup.field(fieldKey!)!)
-    // console.log('BW componentDidMount', fieldKey, value, commonProps.formGroup.fields(null))
-    this._removeListneners = useListenState(this, commonProps.formGroup, fieldKey!, 'value', commonProps.formGroup.field(fieldKey!)!.value)
+    const { commonProps, path } = this.props
+    // const newProps = commonProps.propsGetter!(commonProps.formGroup.field(path!)!)
+    // console.log('BW componentDidMount', path, value, commonProps.formGroup.fields(null))
+    this._removeListneners = useListenState(this, commonProps.formGroup, path!, 'value', commonProps.formGroup.field(path!)!.value)
   }
 
   componentWillUnmount () {
-    // console.log('BW componentWillUnmount', this.props.fieldKey, this.props.value)
+    // console.log('BW componentWillUnmount', this.props.path, this.props.value)
     // 去掉 useListenState
     this._removeListneners()
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-    const { commonProps, fieldKey } = nextProps
+    const { commonProps, path } = nextProps
     if (this.props.path !== nextProps.path) {
       // 去掉 useListenState
       this._removeListneners()
-      this._removeListneners = useListenState(this, commonProps.formGroup, fieldKey!, 'value', commonProps.formGroup.field(fieldKey!)!.value)
+      this._removeListneners = useListenState(this, commonProps.formGroup, path!, 'value', commonProps.formGroup.field(path!)!.value)
     }
 
   }
@@ -77,20 +77,20 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
    * @param {Event|any} valueOrEvent 事件对象或新值
    */
   handleChange (valueOrEvent: Event|any, text?: string) {
-    const { fieldKey, labelKey, commonProps: { formGroup } } = this.props
+    const { path, labelPath, commonProps: { formGroup } } = this.props
     let value = valueOrEvent && valueOrEvent.target
       ? valueOrEvent.target.value
       : valueOrEvent
 
     value = this.parseValueOut(value)
-    if (labelKey) {
+    if (labelPath) {
       text = this.parseValueOut(text)
       formGroup.actions.changeFields({
-        [fieldKey!]: value,
-        [labelKey]: text
+        [path!]: value,
+        [labelPath]: text
       })
     } else {
-      formGroup.actions.changeField(fieldKey!, value)
+      formGroup.actions.changeField(path!, value)
     }
   }
 
@@ -110,7 +110,7 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
   }
 
   getProps () {
-    const { commonProps, attrs, fieldKey, readonly: readOnly, ...rest } = this.props
+    const { commonProps, attrs, path, readonly: readOnly, ...rest } = this.props
     return { ...rest, readOnly }
   }
 

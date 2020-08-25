@@ -8,18 +8,18 @@ import { useListen } from '../hooks'
 
 export function FormItem (props: { field: FieldPropsT, commonProps: FormCommonPropsExtT, children: any }) {
   const { formGroup, vertical, column, gap } = props.commonProps
-  const { fieldKey, title, required, disabled, readonly, hidden, tooltip, widget, span = 1 } = props.field
-  // const { fieldKey, title, tooltip, widget, span = 1 } = props.field
+  const { path, title, required, disabled, readonly, hidden, tooltip, widget, span = 1 } = props.field
+  // const { path, title, tooltip, widget, span = 1 } = props.field
   const { children } = props
 
-  const errors = useListen(formGroup, fieldKey!, 'errors', props.field.errors)
+  const errors = useListen(formGroup, path!, 'errors', props.field.errors)
 
-  // const required = useListen(formGroup, fieldKey!, 'required', props.field.required)
-  // const disabled = useListen(formGroup, fieldKey!, 'disabled', props.field.disabled)
-  // const readonly = useListen(formGroup, fieldKey!, 'readonly', props.field.readonly)
-  // const hidden = useListen(formGroup, fieldKey!, 'hidden', props.field.hidden)
+  // const required = useListen(formGroup, path!, 'required', props.field.required)
+  // const disabled = useListen(formGroup, path!, 'disabled', props.field.disabled)
+  // const readonly = useListen(formGroup, path!, 'readonly', props.field.readonly)
+  // const hidden = useListen(formGroup, path!, 'hidden', props.field.hidden)
 
-  // console.log('render form item', fieldKey, children)
+  // console.log('render form item', path, children)
 
   let tooltipComponent
   if (tooltip) {
@@ -37,7 +37,7 @@ export function FormItem (props: { field: FieldPropsT, commonProps: FormCommonPr
     colon = ''
   }
 
-  return <div className={itemClassName} style={style} data-key={fieldKey}>
+  return <div className={itemClassName} style={style} data-key={path}>
     <label className='fok-form-item-label'>
       <b className='fok-form-item-required'>{(required && !readonly && widget !== 'text') ? '*' : ''}</b>
       <span>

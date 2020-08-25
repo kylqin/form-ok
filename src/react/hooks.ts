@@ -26,14 +26,19 @@ export function useListen (formGroup: FormGroup, key: string, prop: string, init
 }
 
 export function useListenState (comp: BaseWidget, formGroup: FormGroup, key: string, prop: string, initialValue: any) {
+  const listenersToRemove: [string, () => void][] = []
   const updateVal = () => {
     console.log('uselistenState event bus ->', key, prop, (formGroup.field(key)! as any)[prop])
     comp.setState({
       [prop]: (formGroup.field(key)! as any)[prop]
     })
   }
-  comp.listenersToRemove.push([key, updateVal])
+  listenersToRemove.push([key, updateVal])
   formGroup.eventBus.add(key, updateVal)
 
-  return initialValue
+  return () => {
+      for (const l of listenersToRemove) {
+        formGroup.eventBus.remove(l[0], l[1])
+      }
+  }
 }

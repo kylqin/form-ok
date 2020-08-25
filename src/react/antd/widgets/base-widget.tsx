@@ -10,7 +10,8 @@ export type FieldPropsBaseT = Omit<FieldPropsT, 'syncFieldValue|markNeedSyncValu
 export class BaseWidget extends React.Component<FieldPropsBaseT> {
   private _handleChange
   private _handleBlur
-  public listenersToRemove: any[] = []
+
+  private _removeListneners = () => {}
 
   constructor (props) {
     super(props)
@@ -19,7 +20,7 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
       value: props.value
     }
 
-    console.log('BW constructor', props.fieldKey, props.value)
+    console.log('BW constructor >>>>', props.fieldKey)
     this._handleChange = this.handleChange.bind(this)
     this._handleBlur = this.handleBlur.bind(this)
   }
@@ -28,29 +29,21 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
     const { commonProps, fieldKey } = this.props
     // const newProps = commonProps.propsGetter!(commonProps.formGroup.field(fieldKey!)!)
     // console.log('BW componentDidMount', fieldKey, value, commonProps.formGroup.fields(null))
-    this.setState({
-      value: useListenState(this, commonProps.formGroup, fieldKey!, 'value', commonProps.formGroup.field(fieldKey!)!.value)
-    })
+    this._removeListneners = useListenState(this, commonProps.formGroup, fieldKey!, 'value', commonProps.formGroup.field(fieldKey!)!.value)
   }
 
   componentWillUnmount () {
     // console.log('BW componentWillUnmount', this.props.fieldKey, this.props.value)
     // 去掉 useListenState
-    for (const l of this.listenersToRemove) {
-      this.props.commonProps.formGroup.eventBus.remove(l[0], l[1])
-    }
+    this._removeListneners()
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
     const { commonProps, fieldKey } = nextProps
     if (this.props.path !== nextProps.path) {
       // 去掉 useListenState
-      for (const l of this.listenersToRemove) {
-        this.props.commonProps.formGroup.eventBus.remove(l[0], l[1])
-      }
-      this.setState({
-        value: useListenState(this, commonProps.formGroup, fieldKey!, 'value', commonProps.formGroup.field(fieldKey!)!.value)
-      })
+      this._removeListneners()
+      this._removeListneners = useListenState(this, commonProps.formGroup, fieldKey!, 'value', commonProps.formGroup.field(fieldKey!)!.value)
     }
 
   }

@@ -216,7 +216,7 @@ function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, keys: string[]
         // 为数组项构造新的 Field
         const toCache = fieldMap.get(keyWithoutIndex)?.clone()
         if (toCache) {
-          toCache.key = key
+          toCache.path = key
           toCache.value = _.get(dataSet, key)
           toCache.markNeedSyncValue(false)
           console.log('toCache ->', toCache)

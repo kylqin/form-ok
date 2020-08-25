@@ -54,8 +54,8 @@ export function createField ({ key, labelKey, title, value, errors, required, va
 }
 
 export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
-  const { path: key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, /** */readonly, ...restProps } = fieldDefine
-  const extField = new FieldExtT(key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
+  const { path, key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, /** */readonly, ...restProps } = fieldDefine
+  const extField = new FieldExtT(path || key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
   const restPropNames = Object.keys(restProps)
 
   extField.readonly = readonly
@@ -135,5 +135,6 @@ export class FieldPropsT extends FieldExtT {
 }
 
 export interface FieldDefineT extends FieldExtT {
+  key: string,
   [key: string]: any
 }

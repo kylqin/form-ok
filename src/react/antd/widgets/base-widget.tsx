@@ -19,13 +19,13 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
       value: props.value
     }
 
-    // console.log('BW constructor', props.fieldKey, props.value)
+    console.log('BW constructor', props.fieldKey, props.value)
     this._handleChange = this.handleChange.bind(this)
     this._handleBlur = this.handleBlur.bind(this)
   }
 
   componentDidMount () {
-    const { commonProps, fieldKey, value } = this.props
+    const { commonProps, fieldKey } = this.props
     // const newProps = commonProps.propsGetter!(commonProps.formGroup.field(fieldKey!)!)
     // console.log('BW componentDidMount', fieldKey, value, commonProps.formGroup.fields(null))
     this.setState({
@@ -39,6 +39,20 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
     for (const l of this.listenersToRemove) {
       this.props.commonProps.formGroup.eventBus.remove(l[0], l[1])
     }
+  }
+
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    const { commonProps, fieldKey } = nextProps
+    if (this.props.path !== nextProps.path) {
+      // 去掉 useListenState
+      for (const l of this.listenersToRemove) {
+        this.props.commonProps.formGroup.eventBus.remove(l[0], l[1])
+      }
+      this.setState({
+        value: useListenState(this, commonProps.formGroup, fieldKey!, 'value', commonProps.formGroup.field(fieldKey!)!.value)
+      })
+    }
+
   }
 
   getWidgetOptions () { return WidgetMap[this.props.widget] }

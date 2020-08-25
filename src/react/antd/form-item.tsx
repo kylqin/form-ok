@@ -19,7 +19,7 @@ export function FormItem (props: { field: FieldPropsT, commonProps: FormCommonPr
   // const readonly = useListen(formGroup, fieldKey!, 'readonly', props.field.readonly)
   // const hidden = useListen(formGroup, fieldKey!, 'hidden', props.field.hidden)
 
-  // console.log('render form item')
+  // console.log('render form item', fieldKey, children)
 
   let tooltipComponent
   if (tooltip) {

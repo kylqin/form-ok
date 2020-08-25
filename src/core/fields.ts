@@ -171,7 +171,7 @@ export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
       field.path = field.originKey // 同步自动生成的 key
       if (field.labelKey) { field.originLabelKey = field.labelKey }
 
-      console.log('field ->', field)
+      // console.log('field ->', field)
 
       const parentIsArr = parent && parent.widget === 'array'
 
@@ -179,7 +179,7 @@ export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
         // 父亲 widget 为 数组或对象, 处理 key, labelKey, group.key, group.labelKey, 设置 origin{key, labelKey}
         const jointer = parentIsArr ? '[].' : '.'
 
-        console.log('jointer ->', jointer)
+        // console.log('jointer ->', jointer)
 
         field.path = parent!.path + jointer + field.path
         if (field.labelKey) { field.labelKey = parent!.path + jointer + field.labelKey }

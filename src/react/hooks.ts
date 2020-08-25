@@ -5,7 +5,7 @@ import { useMemo, useState, useEffect, ReactComponentElement } from 'react'
 import { BaseWidget } from './antd/widgets';
 
 export function useFormGroup (schema: FormGroupSchema, initialData: PlainObject = {}) {
-  const formGroup = useMemo(() => { console.log('<memo>'); return createFormGroup(schema, initialData) }, [])
+  const formGroup = useMemo(() => { return createFormGroup(schema, initialData) }, [])
 
   return formGroup
 }
@@ -21,7 +21,7 @@ export function useListen (formGroup: FormGroup, key: string, prop: string, init
 
     formGroup.eventBus.add(key, updateVal)
     return () => { formGroup.eventBus.remove(key, updateVal)}
-  }, [])
+  }, [key])
   return val
 }
 

@@ -32,7 +32,7 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
 
   const [valueArr, setValueArr] = useState(value || [])
   const [ids, idsActions, setIds] = useArrayIds(valueArr.length)
-  console.log(ids, idsActions)
+  console.log(ids)
 
   const valueActions = useMemo(() => {
     return {
@@ -40,7 +40,7 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
       remove: (index: number) => {
         const { formGroup } = commonProps
         const arr = (formGroup.field(fieldKey!)!.value || []) as any[]
-        console.log('arr', arr, index)
+        // console.log('arr', arr, index)
         formGroup.actions.changeField(fieldKey!, remove(arr, index), 'arr')
       },
       push: () => {}
@@ -63,7 +63,7 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
       {ids.map((id: string, idx: number) => <ArrayItemWidget arrField={props.field} commonProps={commonProps} id={id} index={idx} key={id} />)}
       <span onClick={() => idsActions.push()}>Add</span>
       <span onClick={() => idsActions.insert(2)}>Insert at 2</span>
-      <span onClick={() => { idsActions.remove(3), valueActions.remove(3) }}>Remove at 3</span>
+      <span onClick={() => { idsActions.remove(0), valueActions.remove(0) }}>Remove at 0</span>
     </ContentBox>
   </div>
 }

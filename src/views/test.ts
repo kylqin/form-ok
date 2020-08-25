@@ -4,10 +4,10 @@ import { FokValidateResult } from "../core/validation";
 
 const fg = createFormGroup({
   fields: [
-    { path: 'k1',  title: 'K1', validators: [(val: string) => ({ valid: val.startsWith('bo'), message: '要bo开头' })], 'c:hidden': g => g['k1'].startsWith('bo') },
-    { path: 'k2',  title: 'K2' },
-    { path: 'k3',  title: 'K3' },
-    { path: 'k4',  title: 'K4', required: true }
+    { key: 'k1',  title: 'K1', validators: [(val: string) => ({ valid: val.startsWith('bo'), message: '要bo开头' })], 'c:hidden': g => g['k1'].startsWith('bo') },
+    { key: 'k2',  title: 'K2' },
+    { key: 'k3',  title: 'K3' },
+    { key: 'k4',  title: 'K4', required: true }
   ],
   validators: [
     [['k1', 'k2'], (k1, k2) => {

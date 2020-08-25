@@ -48,7 +48,7 @@ export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsEx
         if (!widgetOptions) {
           throw Error(`Invalid Widget Type ${fieldProps.widget}`)
         }
-        const key = fieldProps.fieldKey!
+        const key = fieldProps.originKey!
         // console.log('(commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly')
         // console.log((commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly)
         if ((commonProps.readonly || fieldProps.readonly) && widgetOptions.readonly) {

@@ -1,4 +1,4 @@
-import { FieldPropsT } from '@/core/types'
+import { FieldPropsT } from '/@/core/types'
 import React from 'react'
 import { FormCommonPropsExtT, renderCtrls } from '../input-set'
 import { ContentBox } from './content-box'

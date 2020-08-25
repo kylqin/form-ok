@@ -8,7 +8,7 @@ export const  fields: FieldDefineT[] = [
     // { key: 'kk3',  title: 'KK3', 'c:tooltip': g => g['.kk2'] === 'kk2' ? '这是一个完美的の没有bug的tooltip' : '' },
     // { key: 'kk3',  title: 'KK3', tooltip: '这是一个完美的の没有bug的tooltip' },
   ]},
-  { widget: 'object', title: 'Object', properties: [
+  { key: 'obj', widget: 'object', title: 'Object', properties: [
     { key: 'k2',  title: 'K2', validators: [v => ({ valid: v !== '2', message: '不能是2' })] },
     { key: 'k3',  title: 'K3', tooltip: '这是一个完美的の没有bug的tooltip' },
   ]},
@@ -33,3 +33,12 @@ export const watch: WatcherDefineT[] = [
     }
   }]
 ]
+
+export const initialData = {
+  arr: [
+    { kk2: 2 }
+  ],
+  obj: { k2: 'haha' },
+  k10: '~~K10',
+  k11: 'lock'
+}

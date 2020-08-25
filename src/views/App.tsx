@@ -2,7 +2,7 @@ import 'antd/dist/antd.css'
 import React, { useState } from 'react'
 // import { FormItem } from '../react/antd/form-item'
 import './App.css'
-import { fields, watch } from './define-fields'
+import { fields, watch, initialData } from './define-fields'
 // import './test'
 import { InputSet } from '/@/react/antd/input-set'
 import { useFormGroup } from '/@/react/hooks'
@@ -16,7 +16,7 @@ console.log('fields ->', fields)
 const fieldsV = fields.map(f => ({ ...f, path: f.path + '_v' }))
 
 function App() {
-  const formGroup = useFormGroup({ fields, watch })
+  const formGroup = useFormGroup({ fields, watch }, initialData)
   // const formGroupV = useFormGroup({ fields: fieldsV })
 
   return (

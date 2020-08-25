@@ -76,7 +76,8 @@ function setUIProps (field: FieldExtT, commonProps: FormCommonPropsT) {
 /** 生成渲染 Field 需要的属性 */
 function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT): FieldPropsT {
   const { formGroup, readonly } = commonProps
-  const copied = FieldPropsT.fromFieldExtT(field)
+  // 获取 value, 传入的 field 没有值, 通过 formGroup.field 从 fromGroup.__fieldMap 中取值
+  const copied = FieldPropsT.fromFieldExtT(formGroup.field(field.path)!)
 
   setComputeProps(copied, commonProps)
   setUIProps(copied, commonProps)

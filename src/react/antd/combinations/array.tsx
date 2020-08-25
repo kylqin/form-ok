@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState } from 'react'
 import { FormCommonPropsExtT, renderCtrls } from '../input-set'
 import { ContentBox } from './content-box'
 import { FieldPropsT } from '/@/core/types'
@@ -31,7 +31,7 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
 
   const [valueArr, setValueArr] = useState(value || [])
   const [ids, idsActions, setIds] = useArrayIds(valueArr.length)
-  console.log(ids)
+  console.log(ids, valueArr)
 
   const valueActions = useMemo(() => {
     return {

@@ -23,8 +23,8 @@ const genGetProxy = (dp: { data: PlainObject }, field: FieldExtT, parent?: Field
         : !parent
           ? _.get(dataSet, key.slice(1)) // 无父亲，退化为 'key', 'book.mark'
           : parent.widget === 'array' // 父亲是数组: 'parent[idx].key', 'parent[idx].book.mark'
-            ? _.get(dataSet, field.key.slice(0, field.key.length - field.originKey.length - 1) + key) // 替换 origin key 部分, key 是带`.` 的
-            : _.get(dataSet, parent.key + key) // 父亲是对象: 'parent.key', 'parent.book.mark'
+            ? _.get(dataSet, field.path.slice(0, field.path.length - field.originKey.length - 1) + key) // 替换 origin key 部分, key 是带`.` 的
+            : _.get(dataSet, parent.path + key) // 父亲是对象: 'parent.key', 'parent.book.mark'
     }
   })
 }
@@ -82,7 +82,7 @@ function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT): Field
   setUIProps(copied, commonProps)
 
   // 设置 fieldKey
-  copied.fieldKey = copied.key
+  copied.fieldKey = copied.path
 
   // 设置 text
   copied.text = copied.labelKey ? _.get(formGroup.data, copied.labelKey) : ''
@@ -106,14 +106,14 @@ export function createMemoPropsGetter (commonProps: FormCommonPropsT): PropsGett
   const cachedProps: Map<string, FieldPropsT> = new Map()
 
   commonProps.propsGetter = (field: FieldExtT) => {
-    if (cachedProps.has(field.key)) {
+    if (cachedProps.has(field.path)) {
     // 返回缓存
-      return cachedProps.get(field.key)!
+      return cachedProps.get(field.path)!
     }
 
     const toCache = makeFieldProps(field, commonProps)
     // 缓存
-    cachedProps.set(field.key, toCache)
+    cachedProps.set(field.path, toCache)
     return toCache
   }
 
@@ -167,8 +167,8 @@ export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
     fields.forEach(field => {
       // 直接在 field 上修改， 因为 flattenNotTitleGroups 返回的是副本
 
-      field.originKey = field.key || genKey() // 自动生成 key, 并保存至 originKey
-      field.key = field.originKey // 同步自动生成的 key
+      field.originKey = field.path || genKey() // 自动生成 key, 并保存至 originKey
+      field.path = field.originKey // 同步自动生成的 key
       if (field.labelKey) { field.originLabelKey = field.labelKey }
 
       console.log('field ->', field)
@@ -181,17 +181,17 @@ export function normalizeFields (fields: FieldDefineT[]): FieldExtT[] {
 
         console.log('jointer ->', jointer)
 
-        field.key = parent!.key + jointer + field.key
-        if (field.labelKey) { field.labelKey = parent!.key + jointer + field.labelKey }
+        field.path = parent!.path + jointer + field.path
+        if (field.labelKey) { field.labelKey = parent!.path + jointer + field.labelKey }
 
         if (field.group && isGroupWithoutTitle(field.group)) {
           // 无标题组 也要处理
           if (!(field.group as any).__ok_keyIsNormalized) {
             // 避免重复处理
-            field.group.originKey = field.group.key || genKey()
-            field.group.key = field.group.originKey
+            field.group.originKey = field.group.path || genKey()
+            field.group.path = field.group.originKey
 
-            field.group.key = parent!.key + jointer + field.group.key
+            field.group.path = parent!.path + jointer + field.group.path
             ;(field.group as any).__ok_keyIsNormalized = true
           }
         }

@@ -134,14 +134,14 @@ async function actionValidate (
 
   const validateSingle = async (f: FieldPropsT): Promise<ActionValidateResultT> => {
     try {
-      await validateField(f.validators, f.value, f.key);
-      actions.deleteError(f.key);
+      await validateField(f.validators, f.value, f.path);
+      actions.deleteError(f.path);
       return []
     }
     catch (message) {
-      console.log('err message', f.key, message);
-      actions.setError(f.key, message);
-      return [[f.key, message]];
+      console.log('err message', f.path, message);
+      actions.setError(f.path, message);
+      return [[f.path, message]];
     }
   }
 

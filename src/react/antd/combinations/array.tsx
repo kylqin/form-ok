@@ -75,7 +75,7 @@ const ArrayItemWidget = (props: { arrField: FieldPropsT, commonProps: FormCommon
   const _properties = properties.map(propField => {
     const newPropField = {
       ...propField,
-      key: fieldKey + jointer + propField.originKey
+      path: fieldKey + jointer + propField.originKey
     }
 
     if (propField.labelKey) {
@@ -84,7 +84,7 @@ const ArrayItemWidget = (props: { arrField: FieldPropsT, commonProps: FormCommon
 
     if (propField.group) {
       if (isGroupWithoutTitle(propField.group)) {
-        newPropField.group.key = fieldKey + jointer + propField.group.originKey
+        newPropField.group.path = fieldKey + jointer + propField.group.originKey
       }
     }
     return newPropField

@@ -29,7 +29,7 @@ export type FieldTypeT = 'number' | 'string' | 'boolean' | 'object' | 'array' | 
 
 export class FieldT {
   constructor(
-    public key: string = '',
+    public path: string = '',
     public labelKey?: string,
 
     public title: string = '',
@@ -54,7 +54,7 @@ export function createField ({ key, labelKey, title, value, errors, required, va
 }
 
 export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
-  const { key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, /** */readonly, ...restProps } = fieldDefine
+  const { path: key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, /** */readonly, ...restProps } = fieldDefine
   const extField = new FieldExtT(key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
   const restPropNames = Object.keys(restProps)
 
@@ -101,7 +101,7 @@ export class FieldExtT extends FieldT {
   public syncFieldValue (dataSet: PlainObject) {
     if (this.__ok_needSyncValue) {
       this.__ok_preValue = this.value
-      this.value = _.get(dataSet, this.key)
+      this.value = _.get(dataSet, this.path)
       this.__ok_needSyncValue = false
     }
   }

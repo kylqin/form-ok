@@ -13,7 +13,7 @@ import { ContentBox } from '../react/antd/combinations/content-box'
 
 
 console.log('fields ->', fields)
-const fieldsV = fields.map(f => ({ ...f, key: f.key + '_v' }))
+const fieldsV = fields.map(f => ({ ...f, path: f.path + '_v' }))
 
 function App() {
   const formGroup = useFormGroup({ fields, watch })

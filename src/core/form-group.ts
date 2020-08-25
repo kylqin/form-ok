@@ -244,7 +244,7 @@ function utilGetAllFields (fieldMap: FieldMap, dataSet: PlainObject): FieldExtT[
 
   for (const field of fieldArr) {
     // 去掉 空index[] 数组项 Field
-    if (!utilIsEmptyArrProp(field.key)) {
+    if (!utilIsEmptyArrProp(field.path)) {
       field.syncFieldValue(dataSet)
       fields.push(field)
     }
@@ -318,13 +318,13 @@ function uitlCreateFieldMap (fields: FieldExtT[]) : FieldMap {
 
   const map = new Map()
   flatten(fields).forEach(field => {
-    map.set(field.key, field)
+    map.set(field.path, field)
   })
 
   // 判断是否添加自动生成的 labelKey Field
   for (const labelKey of labelKeys) {
     if (!map.has(labelKey)) {
-      map.set(labelKey, createFieldExt({ key: labelKey } as FieldDefineT))
+      map.set(labelKey, createFieldExt({ path: labelKey } as FieldDefineT))
     }
   }
 

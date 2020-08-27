@@ -49,6 +49,26 @@
     margin-right: 20px;
     padding-bottom: 10px;
   }
+
+  .fok-form-item-array {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+    border: 1px dashed rgb(217,217,217);
+
+    .fok-form-item-array-item-remove {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translate(50%, -50%) scale(1.2);
+      color: #ec5f5f;
+    }
+    &:hover .fok-form-item-array-item-remove {
+      display: inline-block;
+    }
+  }
 }
 
 .fok-content-box {

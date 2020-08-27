@@ -1,3 +1,5 @@
+import { MinusCircleFilled, PlusOutlined } from '@ant-design/icons'
+import { Button } from 'antd'
 import React, { useMemo, useState } from 'react'
 import { FormCommonPropsExtT, renderCtrls } from '../input-set'
 import { ContentBox } from './content-box'
@@ -50,27 +52,28 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
 
   return <div key={path} className='fok-form-item-combination fok-form-item-combination-box'>
     <ContentBox title={title}>
-      {ids.map((id: string, idx: number) => <ArrayItemWidget arrField={props.field} commonProps={commonProps} id={id} index={idx} key={id} />)}
-      <span onClick={() => idsActions.push()}>Add</span>
-      <span onClick={() => idsActions.insert(2)}>Insert at 2</span>
-      <span onClick={() => { idsActions.remove(0), valueActions.remove(0) }}>Remove at 0</span>
+      {ids.map((id: string, idx: number) =>
+        <ArrayItemWidget arrField={props.field} commonProps={commonProps} id={id} index={idx} key={id} removeItem={() => { idsActions.remove(idx); valueActions.remove(idx) }}/>
+      )}
+      <Button type='dashed' block icon={<PlusOutlined />} onClick={() => idsActions.push()} />
+      {/* <span onClick={() => idsActions.insert(2)}>Insert at 2</span>
+      <span onClick={() => { idsActions.remove(0), valueActions.remove(0) }}>Remove at 0</span> */}
     </ContentBox>
   </div>
 }
 
-const ArrayItemWidget = (props: { arrField: FieldPropsT, commonProps: FormCommonPropsExtT, id: string, index: number }) => {
+const ArrayItemWidget = (props: { arrField: FieldPropsT, commonProps: FormCommonPropsExtT, id: string, index: number, removeItem: () => void }) => {
   const { readonly, disabled, hidden, path, title, properties } = props.arrField
-  const { commonProps, id, index } = props
+  const { commonProps, id, index, removeItem } = props
   const jointer = '[' + index + '].'
   const _properties = properties!.map(propField => {
     const newPath = path + jointer + propField.defineKey
     const newPropField = commonProps.formGroup.field(newPath)!
     return newPropField
   })
-  // console.log('_properties ->', _properties)
 
-  return <div className='' style={{ display: 'flex', flexWrap: 'wrap' }} date-key={path + jointer}>
-    {id}
+  return <div className='fok-form-item-array' date-key={path + jointer}>
     {renderCtrls(_properties, commonProps)}
+    <MinusCircleFilled className='fok-form-item-array-item-remove' onClick={removeItem}/>
   </div>
 }

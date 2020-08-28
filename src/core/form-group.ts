@@ -5,6 +5,7 @@ import { normalizeFields } from './fields';
 import { ComputePropT, createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
 import { isPlain, utilEmptyArrPropPath, utilIsArrPropPath, utilIsEmptyArrPropPath } from './utils';
 import { MultiValidatorDefineT, ValidateCombine } from './validation';
+import { DepMap, createMapByDeps, getByDeps } from './dep-map'
 
 type WatcherTriggerInfo = {
   path?: string,
@@ -15,9 +16,6 @@ type WatcherTriggerInfo = {
 export type WatcherDefineT = [string[], (...valuesAndWatherTrigerInfo: (any|WatcherTriggerInfo)[]) => void]
 
 type FieldMap = Map<string, FieldExtT>
-type DepMap<T> = Map<string, T[]>
-// type ValidatorsMap = Map<string, MultiValidatorDefineT[]>
-// type WatchersMap = Map<string, WatcherDefineT[]>
 type ValidatorsMap = DepMap<MultiValidatorDefineT>
 type WatchersMap = DepMap<WatcherDefineT>
 type ComputesMap = DepMap<ComputePropT>
@@ -120,7 +118,7 @@ export class FormGroup {
   }
 
   fieldValidators (path: null|string|string[]): ValidateCombine[] {
-    const filteredValidators = uitlGetByDeps(path, this.__validatorsMap)
+    const filteredValidators = getByDeps(path, this.__validatorsMap)
 
     return filteredValidators.map((validator) => {
       return {
@@ -131,7 +129,7 @@ export class FormGroup {
   }
 
   fieldWatchers (path: string|string[]) {
-    const filteredWatchers: WatcherDefineT[] = uitlGetByDeps(path, this.__watchersMap)
+    const filteredWatchers: WatcherDefineT[] = getByDeps(path, this.__watchersMap)
 
     return filteredWatchers.map(([deps, handler]) => {
       return {
@@ -143,7 +141,7 @@ export class FormGroup {
   }
 
   fieldComputes (path: string|string[]) {
-    const filteredComputes: ComputePropT[] = uitlGetByDeps(path, this.__computesMap)
+    const filteredComputes: ComputePropT[] = getByDeps(path, this.__computesMap)
 
     return filteredComputes.map(([deps, [pathProp, handler]]) => {
       return {
@@ -221,11 +219,11 @@ export class FormGroup {
 }
 
 function utilCreateValidatorsMap (validators: MultiValidatorDefineT[]): ValidatorsMap {
-  return utilCreateMapByDeps(validators)
+  return createMapByDeps(validators)
 }
 
 function utilCreateWatchersMap (watchers: WatcherDefineT[]): WatchersMap {
-  return utilCreateMapByDeps(watchers)
+  return createMapByDeps(watchers)
 }
 
 function utilCreateComputesMap(fieldMap: FieldMap): ComputesMap {
@@ -236,40 +234,7 @@ function utilCreateComputesMap(fieldMap: FieldMap): ComputesMap {
       computes.push([deps, [`${field.path}:${prop}`, compute]])
     })
   }
-  return utilCreateMapByDeps(computes)
-}
-
-function utilCreateMapByDeps<T extends any[]> (defines: T[]): DepMap<T> {
-  const map = new Map()
-  for (const def of defines) {
-    const [paths] = def
-    for (const path of paths) {
-      if (map.has(path)) {
-        map.get(path).push(def)
-      } else {
-        map.set(path, [def])
-      }
-    }
-  }
-  return map
-}
-
-function uitlGetByDeps<T extends any[]> (path: null|string|string[], depMap: Map<string,T[]>): Array<T> {
-    let filteredValidators: T[] = []
-    if (Array.isArray(path)) {
-      const hasIt = new Set() // 用于过滤掉相同的
-      for (const k of path) {
-        for (const vtor of (depMap.get(k) || [])) {
-          if (!hasIt.has(vtor[1])) { // vtor[1], 是函数
-            filteredValidators.push(vtor)
-            hasIt.add(vtor[1])
-          }
-        }
-      }
-    } else if (path) {
-      filteredValidators = depMap.get(path) || []
-    }
-    return filteredValidators
+  return createMapByDeps(computes)
 }
 
 /** 根据 paths 数组 获取 Field 数组 */

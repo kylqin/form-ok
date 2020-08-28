@@ -11,7 +11,9 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
   private _handleBlur
   private _handleFocus
 
-  private _focused = false
+  /** 初始值设置为 true, 可以避免 `首次输入时 控件 value 变为 ''` 的bug */
+  /** 原因: 如果 _focused 初始值为 false, 首次 focus 时会引起 value 的跳变 */
+  private _focused = true
 
   constructor (props) {
     super(props)

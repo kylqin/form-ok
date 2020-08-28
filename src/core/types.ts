@@ -22,7 +22,16 @@ export type EnumItemT = {
   label: string
 }
 
-export type ComputePropT = (dataSet: any, field: FieldExtT, formGroup: FormGroup) => any
+type ComputePropsParamEnv = {
+  data: any,
+  field: FieldExtT,
+  formGroup: FormGroup
+}
+
+/** [deps, computeFn] */
+export type ComputePropDefineT = [string[], (...fieldValuesAndEnv: (any|ComputePropsParamEnv)[]) => any]
+/** [deps, [path:prop, computeFn]] */
+export type ComputePropT = [string[], [string, (...fieldValuesAndEnv: (any|ComputePropsParamEnv)[]) => any]]
 
 export type FieldTypeT = 'number' | 'string' | 'boolean' | 'object' | 'array' | 'date'
 // export enum  FieldTypeT
@@ -65,9 +74,10 @@ export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
   extField.exts = restProps
 
   // 设置 compute
-  extField.compute = restPropNames.reduce((acc: PlainObject, propName) => {
+  extField.compute = restPropNames.reduce((acc: { [prop: string]: ComputePropDefineT }, propName) => {
     if (propName.startsWith('c:')) {
-      acc[propName.slice(0, propName.length - 3)] = restProps[propName]
+      const prop = propName.slice(2)
+      acc[prop] = restProps[propName]
     }
     return acc
   }, {})
@@ -88,7 +98,7 @@ export class FieldExtT extends FieldT {
   public onChange?: OnChangeCallbackT
   public onBlur?: Function
 
-  public compute?: { [prop: string]: ComputePropT }
+  public compute?: { [prop: string]: ComputePropDefineT }
 
   public readonly?: boolean
 
@@ -96,6 +106,9 @@ export class FieldExtT extends FieldT {
 
   private __ok_needSyncValue?: boolean = true
   private __ok_preValue?: any
+  private __ok_needSyncProps?: boolean = true
+
+  get propsDirty () { return this.__ok_needSyncProps }
 
   /** 同步 Field value */
   public syncFieldValue (dataSet: PlainObject) {
@@ -107,6 +120,8 @@ export class FieldExtT extends FieldT {
   }
   /** 标记 Field 需要同步值 */
   public markNeedSyncValue (need = true) { this.__ok_needSyncValue = need }
+  /** 标记 Field 需要同步属性 */
+  public markNeedSyncProps (need = true) { this.__ok_needSyncProps = need }
 
   /** clone */
   public clone () { return clone(this, new FieldExtT()) as FieldExtT }

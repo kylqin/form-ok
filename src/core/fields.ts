@@ -50,11 +50,13 @@ function setComputeProps (field: FieldExtT, commonProps: FormCommonPropsT) {
           (field as any)[propName] = true
         } else {
           // 否则, 计算之
-          (field as any)[propName] = field.compute![propName](Get, field, formGroup)
+          // (field as any)[propName] = field.compute![propName][1](Get, field, formGroup)
+          (field as any)[propName] = formGroup.computed(field.path, propName)
         }
       } else {
         // 否则， 计算之
-        (field as any)[propName] = field.compute![propName](Get, field, formGroup)
+        // (field as any)[propName] = field.compute![propName][1](Get, field, formGroup)
+        (field as any)[propName] = formGroup.computed(field.path, propName)
       }
     })
   }
@@ -103,13 +105,16 @@ function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT): Field
 export function createMemoPropsGetter (commonProps: FormCommonPropsT): PropsGetter {
   const cachedProps: Map<string, FieldPropsT> = new Map()
 
+  console.log('createMemoPropsGetter called')
+
   commonProps.propsGetter = (field: FieldExtT) => {
-    if (cachedProps.has(field.path)) {
+    if (cachedProps.has(field.path) && !field.propsDirty) {
     // 返回缓存
       return cachedProps.get(field.path)!
     }
 
     const toCache = makeFieldProps(field, commonProps)
+    field.markNeedSyncProps(false)
     // 缓存
     cachedProps.set(field.path, toCache)
     return toCache

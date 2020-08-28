@@ -1,10 +1,10 @@
 import _ from 'lodash';
-import { normalizeFields, isGroupWithoutTitle } from './fields';
-import { createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
-import { isPlain, utilIsArrPropPath, utilEmptyArrPropPath, utilIsEmptyArrPropPath } from './utils';
-import { MultiValidatorDefineT, ValidateCombine } from './validation';
 import { ActionsT } from './actions';
-import { EventBus } from './events'
+import { EventBus } from './events';
+import { normalizeFields } from './fields';
+import { ComputePropT, createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
+import { isPlain, utilEmptyArrPropPath, utilIsArrPropPath, utilIsEmptyArrPropPath } from './utils';
+import { MultiValidatorDefineT, ValidateCombine } from './validation';
 
 type WatcherTriggerInfo = {
   path?: string,
@@ -20,6 +20,8 @@ type DepMap<T> = Map<string, T[]>
 // type WatchersMap = Map<string, WatcherDefineT[]>
 type ValidatorsMap = DepMap<MultiValidatorDefineT>
 type WatchersMap = DepMap<WatcherDefineT>
+type ComputesMap = DepMap<ComputePropT>
+type ComputedMap = Map<string, Map<string, any>>
 
 export type FormGroupSchema = {
   fields?: FieldDefineT[],
@@ -43,6 +45,10 @@ export class FormGroup {
 
   private __validatorsMap: ValidatorsMap
   private __watchersMap: WatchersMap
+  private __computesMap: ComputesMap
+
+  /** Map<path, Map<prop, propValue>> */
+  private __computedMap: ComputedMap = new Map()
 
   public actions: ActionsT
 
@@ -52,6 +58,7 @@ export class FormGroup {
     [this.__fieldSchema, this.__fieldMap] = uitlCreateNormalizedFieldsWithFlattenedMap(fields)
     this.__validatorsMap = utilCreateValidatorsMap(this.validators)
     this.__watchersMap = utilCreateWatchersMap(this.watch)
+    this.__computesMap = utilCreateComputesMap(this.__fieldMap)
     this.__dataSet = initalData
     this.actions = new ActionsT(this)
   }
@@ -106,6 +113,7 @@ export class FormGroup {
     const [field] = utilGetFields(this.__fieldMap, this.__dataSet, [path])
     if (field) {
       update(field)
+      field.markNeedSyncProps()
     } else {
       notFund && notFund()
     }
@@ -133,6 +141,83 @@ export class FormGroup {
       }
     })
   }
+
+  fieldComputes (path: string|string[]) {
+    const filteredComputes: ComputePropT[] = uitlGetByDeps(path, this.__computesMap)
+
+    return filteredComputes.map(([deps, [pathProp, handler]]) => {
+      return {
+        pathProp,
+        handler,
+        paths: deps,
+        values: deps.map((path: string) => _.get(this.__dataSet, path))
+      }
+    })
+  }
+
+  fieldOwnComputes (path: string, prop?: string) {
+    if (prop) {
+      for (const computeArr of this.__computesMap.values()) {
+        for (const _compute of computeArr) {
+          const [deps, [pathProp, compute]] = _compute
+          const [_path, _prop] = pathProp.split(':')
+          if (path === _path && prop === _prop) {
+            return [{
+              pathProp,
+              handler: compute,
+              paths: deps,
+              values: deps.map((path: string) => _.get(this.__dataSet, path))
+            }]
+          }
+        }
+      }
+    } else {
+      const computes = []
+      for (const computeArr of this.__computesMap.values()) {
+        for (const _compute of computeArr) {
+          const [deps, [pathProp, compute]] = _compute
+          const [_path] = pathProp.split(':')
+          if (path === _path) {
+            computes.push({
+              pathProp,
+              handler: compute,
+              paths: deps,
+              values: deps.map((path: string) => _.get(this.__dataSet, path))
+            })
+          }
+        }
+      }
+      return computes
+    }
+
+    return []
+  }
+
+  updateComputed (path: string, prop: string, value: any) {
+    if (!this.__computedMap.has(path)) {
+      this.__computedMap.set(path, new Map())
+    }
+    const pathMap = this.__computedMap.get(path)!
+    pathMap.set(prop, value)
+    this.field(path)!.markNeedSyncProps()
+  }
+
+  computed (path?: string, prop?: string): ComputedMap|any {
+    if (!path) {
+      return this.__computedMap
+    } else if (!prop){
+      return this.__computedMap.get(path)
+    } else {
+      const pathMap = this.__computedMap.get(path)
+      if (pathMap && pathMap.has(prop)) {
+        return this.__computedMap.get(path)!.get(prop!)
+      }
+      const [compute] = this.fieldOwnComputes(path, prop)
+      const value = compute.handler(...compute.values, {})
+      this.updateComputed(path, prop, value)
+      return value
+    }
+  }
 }
 
 function utilCreateValidatorsMap (validators: MultiValidatorDefineT[]): ValidatorsMap {
@@ -143,7 +228,18 @@ function utilCreateWatchersMap (watchers: WatcherDefineT[]): WatchersMap {
   return utilCreateMapByDeps(watchers)
 }
 
-function utilCreateMapByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (defines: T[]): DepMap<T> {
+function utilCreateComputesMap(fieldMap: FieldMap): ComputesMap {
+  const computes: ComputePropT[] = []
+  for (const field of fieldMap.values()) {
+    Object.keys(field.compute!).forEach((prop: string) => {
+      const [deps, compute] = field.compute![prop]
+      computes.push([deps, [`${field.path}:${prop}`, compute]])
+    })
+  }
+  return utilCreateMapByDeps(computes)
+}
+
+function utilCreateMapByDeps<T extends any[]> (defines: T[]): DepMap<T> {
   const map = new Map()
   for (const def of defines) {
     const [paths] = def
@@ -158,7 +254,7 @@ function utilCreateMapByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (de
   return map
 }
 
-function uitlGetByDeps<T extends MultiValidatorDefineT|WatcherDefineT> (path: null|string|string[], depMap: Map<string,T[]>): Array<T> {
+function uitlGetByDeps<T extends any[]> (path: null|string|string[], depMap: Map<string,T[]>): Array<T> {
     let filteredValidators: T[] = []
     if (Array.isArray(path)) {
       const hasIt = new Set() // 用于过滤掉相同的
@@ -207,7 +303,7 @@ function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, paths: string[
 
           toCache.value = _.get(dataSet, path)
           toCache.markNeedSyncValue(false)
-          console.log('toCache ->', toCache)
+          // console.log('toCache ->', toCache)
           // 保存新的的 Field
           fieldMap.set(path, toCache)
           return toCache
@@ -281,7 +377,7 @@ function utilGetAllFields (fieldMap: FieldMap, dataSet: PlainObject): FieldExtT[
 /** 标准化 Field path, 并创建扁平的 Map<path, FieldExtT> */
 function uitlCreateNormalizedFieldsWithFlattenedMap (fields: FieldDefineT[]): [FieldExtT[], FieldMap] {
   const normalized = normalizeFields(fields)
-  console.log('normalized Fields ->', normalized)
+  // console.log('normalized Fields ->', normalized)
   const flattened = uitlCreateFieldMap(normalized)
   return [normalized, flattened]
 }

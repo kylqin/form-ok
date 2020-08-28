@@ -1,8 +1,7 @@
 import React from 'react'
-import { FieldPropsT } from '/@/core/types'
-import { WidgetMap } from '../widget-map'
 import { FormCommonPropsExtT } from '../input-set'
-import { useListenState } from '../../hooks'
+import { WidgetMap } from '../widget-map'
+import { FieldPropsT } from '/@/core/types'
 
 export type FieldPropsBaseT = Omit<FieldPropsT, 'syncFieldValue|markNeedSyncValue|clone'> & { commonProps: FormCommonPropsExtT }
 
@@ -10,42 +9,17 @@ export type FieldPropsBaseT = Omit<FieldPropsT, 'syncFieldValue|markNeedSyncValu
 export class BaseWidget extends React.Component<FieldPropsBaseT> {
   private _handleChange
   private _handleBlur
+  private _handleFocus
 
-  private _removeListneners = () => {}
+  private _focused = false
 
   constructor (props) {
     super(props)
 
-    this.state = {
-      value: props.value
-    }
-
     console.log('BW constructor >>>>', props.path)
     this._handleChange = this.handleChange.bind(this)
     this._handleBlur = this.handleBlur.bind(this)
-  }
-
-  componentDidMount () {
-    const { commonProps, path } = this.props
-    // const newProps = commonProps.propsGetter!(commonProps.formGroup.field(path!)!)
-    // console.log('BW componentDidMount', path, value, commonProps.formGroup.fields(null))
-    this._removeListneners = useListenState(this, commonProps.formGroup, path!, 'value', commonProps.formGroup.field(path!)!.value)
-  }
-
-  componentWillUnmount () {
-    // console.log('BW componentWillUnmount', this.props.path, this.props.value)
-    // 去掉 useListenState
-    this._removeListneners()
-  }
-
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    const { commonProps, path } = nextProps
-    if (this.props.path !== nextProps.path) {
-      // 去掉 useListenState
-      this._removeListneners()
-      this._removeListneners = useListenState(this, commonProps.formGroup, path!, 'value', commonProps.formGroup.field(path!)!.value)
-    }
-
+    this._handleFocus = this.handleFocus.bind(this)
   }
 
   getWidgetOptions () { return WidgetMap[this.props.widget] }
@@ -99,13 +73,24 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
    * @param {Event|any} valueOrEvent 事件对象或新值
    */
   handleBlur (valueOrEvent: Event|any) {
+    // blur 后，Input 变为受控组件，便于控件外部改变控件的值
+    this._focused = false
     const { onBlur, value, text, commonProps: { formGroup } } = this.props
     onBlur && onBlur(value, text, formGroup)
   }
 
+  /**
+   * focus 回调， focus 后，Input 变为非受控组件
+   * @param {Event} e
+  */
+ handleFocus (e: Event) {
+  this._focused = true
+  // this.props.onFocus && this.props.onFocus(e)
+ }
+
   getValue () {
-    // const { value } = this.props
-    const { value } = this.state
+    const { value } = this.props
+    // const { value } = this.state
     return this.parseValueIn(value === '' || value === null ? undefined : value)
   }
 
@@ -126,12 +111,15 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
   /** 获取 Input 属性 */
   getInputProps () {
     const { disabled } = this.props
+    const value = this.getValue()
     const inputPros = {
       className: 'fok-form-item-input-control',
-      value: this.getValue(),
+      value: this._focused ? undefined : value,
+      defaultValue: value,
       disabled,
       onChange: this._handleChange,
-      onBlur: this._handleBlur
+      onBlur: this._handleBlur,
+      onFocus: this._handleFocus
     }
 
     return inputPros

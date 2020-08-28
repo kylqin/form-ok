@@ -1,7 +1,8 @@
-import { FormGroupSchema, createFormGroup, FormGroup } from '/@/core/form-group'
+import { useEffect, useMemo, useState } from 'react'
+import { FormCommonPropsExtT } from './antd/input-set'
+import { BaseWidget } from './antd/widgets'
+import { createFormGroup, FormGroup, FormGroupSchema } from '/@/core/form-group'
 import { PlainObject } from '/@/core/types'
-import { useMemo, useState, useEffect, ReactComponentElement } from 'react'
-import { BaseWidget } from './antd/widgets';
 
 export function useFormGroup (schema: FormGroupSchema, initialData: PlainObject = {}) {
   const formGroup = useMemo(() => { return createFormGroup(schema, initialData) }, [])
@@ -9,19 +10,21 @@ export function useFormGroup (schema: FormGroupSchema, initialData: PlainObject 
   return formGroup
 }
 
-export function useListen (formGroup: FormGroup, path: string, prop: string, initialValue: any) {
-  const [val, setVal] = useState(initialValue)
+export function useListenProps (formGroup: FormGroup, path: string, initialProps: PlainObject, commonProps: FormCommonPropsExtT) {
+  const [props, setProps] = useState(initialProps)
 
   useEffect(() => {
-    const updateVal = () => {
-      // console.log('event bus ->', path, prop)
-      setVal((formGroup.field(path)! as any)[prop])
+    const updateProps = () => {
+      const newProps = commonProps.propsGetter!(formGroup.field(path)!)
+      console.log('useListenProps updateProps', path, props, newProps)
+      setProps(newProps)
     }
 
-    formGroup.eventBus.add(path, updateVal)
-    return () => { formGroup.eventBus.remove(path, updateVal)}
+    formGroup.eventBus.add(path, updateProps)
+    return () => { formGroup.eventBus.remove(path, updateProps)}
   }, [path])
-  return val
+
+  return props
 }
 
 export function useListenState (comp: BaseWidget, formGroup: FormGroup, path: string, prop: string, initialValue: any) {

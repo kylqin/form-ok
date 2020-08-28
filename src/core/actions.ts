@@ -86,22 +86,26 @@ function actionChangeFields (actions: ActionsT, formGroup: FormGroup, pathValueM
   actionUtilTrigger(actions, formGroup, paths, actionId)
 }
 
-/** trigger onChange events & validation & watch */
+/** trigger onChange events & validation & watch & compute */
 function actionUtilTrigger (actions: ActionsT, formGroup: FormGroup, path: string|string[], actionId?: string) {
   // TODO: 触发 onChange 事件 吗？
   // 触发 watch
   actionUtilTriggerWatch(actions, formGroup, path, actionId)
   // 触发 validation
   actionUtilTriggerValidation(actions, path)
+  // 触发 compute
+  actionUtilTriggerCompute(actions, formGroup, path, actionId)
 
   // TODO: nextTick 执行 tasks
   Promise.resolve().then(() => {
     // console.log(actions._taskManager)
     actions._taskManager.run()
   }).then(() => {
-    if (typeof path === 'string') {
-      formGroup.eventBus.dispatch(path, {})
-    }
+    formGroup.fields().forEach(field => {
+      if (field!.propsDirty) {
+        formGroup.eventBus.dispatch(field!.path, {})
+      }
+    })
   })
 }
 
@@ -117,6 +121,17 @@ function actionUtilTriggerWatch (actions: ActionsT, formGroup: FormGroup, path: 
 /** 触发 validation */
 function actionUtilTriggerValidation (actions: ActionsT, path: string|string[]) {
   actions._taskManager.add(() => actions.validate(path, { ignoreRequired: false, validatorMap: {} })) // TODO: 注册 validatorMap
+}
+
+/** 触发 watch */
+function actionUtilTriggerCompute (actions: ActionsT, formGroup: FormGroup, path: string|string[], actionId?: string) {
+  const computes = formGroup.fieldComputes(path)
+  computes.forEach(compute => {
+    actions._taskManager.add(() => {
+      const [path, prop] = compute.pathProp.split(':')
+      formGroup.updateComputed(path, prop, compute.handler(...compute.values, { actionId, path, formGroup }))
+    })
+  })
 }
 
 type ActionValidateResultT = [string|string[], string][]

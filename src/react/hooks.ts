@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FormCommonPropsExtT } from './antd/input-set'
-import { BaseWidget } from './antd/widgets'
 import { createFormGroup, FormGroup, FormGroupSchema } from '/@/core/form-group'
 import { PlainObject } from '/@/core/types'
 
@@ -16,31 +15,23 @@ export function useListenProps (formGroup: FormGroup, path: string, initialProps
   useEffect(() => {
     const updateProps = () => {
       const newProps = commonProps.propsGetter!(formGroup.field(path)!)
-      console.log('useListenProps updateProps', path, props, newProps)
+      console.log('useListenProps updateProps', path, newProps)
       setProps(newProps)
     }
 
-    formGroup.eventBus.add(path, updateProps)
-    return () => { formGroup.eventBus.remove(path, updateProps)}
+    return formGroup.eventBus.listenPropsUpdate(path, updateProps)
   }, [path])
 
   return props
 }
 
-export function useListenState (comp: BaseWidget, formGroup: FormGroup, path: string, prop: string, initialValue: any) {
-  const listenersToRemove: [string, () => void][] = []
-  const updateVal = () => {
-    console.log('uselistenState event bus ->', path, prop, (formGroup.field(path)! as any)[prop])
-    comp.setState({
-      [prop]: (formGroup.field(path)! as any)[prop]
+export function useListenValue (formGroup: FormGroup, path: string, initialValue: any) {
+  const [value, setValue] = useState(initialValue)
+  useEffect(() => {
+    return formGroup.eventBus.listenValueUpdate(path, () => {
+      console.log('uselistenValue updateValue ->', path, formGroup.field(path)!.value)
+      setValue(formGroup.field(path)!.value)
     })
-  }
-  listenersToRemove.push([path, updateVal])
-  formGroup.eventBus.add(path, updateVal)
-
-  return () => {
-      for (const l of listenersToRemove) {
-        formGroup.eventBus.remove(l[0], l[1])
-      }
-  }
+  }, [path])
+  return value
 }

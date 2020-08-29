@@ -1,6 +1,5 @@
 import React from 'react'
 import { registerWidgets } from './register-widget'
-import { BaseWidget } from './base-widget'
 
 
 /** 占位 */
@@ -31,10 +30,10 @@ export class TitleLineWidget extends React.Component {
 }
 
 const registered  = registerWidgets({
-  empty: { widget: EmptyWidget as (typeof BaseWidget), notField: true },
-  hl: { widget: HorizentalLineWidget as (typeof BaseWidget), notField: true },
-  hr: { widget: HorizentalReturnWidget as (typeof BaseWidget), notField: true },
-  titleLine: { widget: TitleLineWidget as (typeof BaseWidget), notField: true }
+  empty: { widget: EmptyWidget, notField: true },
+  hl: { widget: HorizentalLineWidget, notField: true },
+  hr: { widget: HorizentalReturnWidget, notField: true },
+  titleLine: { widget: TitleLineWidget, notField: true }
 })
 
 export const widgetEmpty = { widget: 'empty' }

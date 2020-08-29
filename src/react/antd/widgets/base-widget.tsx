@@ -9,19 +9,17 @@ export type FieldPropsBaseT = Omit<FieldPropsT, 'syncFieldValue|markNeedSyncValu
 export class BaseWidget extends React.Component<FieldPropsBaseT> {
   private _handleChange
   private _handleBlur
-  private _handleFocus
-
-  /** 初始值设置为 true, 可以避免 `首次输入时 控件 value 变为 ''` 的bug */
-  /** 原因: 如果 _focused 初始值为 false, 首次 focus 时会引起 value 的跳变 */
-  private _focused = true
 
   constructor (props) {
     super(props)
 
+    this.state = {
+      value: props.value
+    }
+
     console.log('BW constructor >>>>', props.path)
     this._handleChange = this.handleChange.bind(this)
     this._handleBlur = this.handleBlur.bind(this)
-    this._handleFocus = this.handleFocus.bind(this)
   }
 
   getWidgetOptions () { return WidgetMap[this.props.widget] }
@@ -43,7 +41,7 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
     // 解析进来的 value
     const vp = WidgetMap[widget].valueParser
     if (vp && vp.toWidget) {
-      return vp.toWidget(value, this.props, formGroup.data)
+      return vp.toWidget(value, this.props)
     }
     return value
   }
@@ -75,24 +73,13 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
    * @param {Event|any} valueOrEvent 事件对象或新值
    */
   handleBlur (valueOrEvent: Event|any) {
-    // blur 后，Input 变为受控组件，便于控件外部改变控件的值
-    this._focused = false
     const { onBlur, value, text, commonProps: { formGroup } } = this.props
     onBlur && onBlur(value, text, formGroup)
   }
 
-  /**
-   * focus 回调， focus 后，Input 变为非受控组件
-   * @param {Event} e
-  */
- handleFocus (e: Event) {
-  this._focused = true
-  // this.props.onFocus && this.props.onFocus(e)
- }
-
   getValue () {
-    const { value } = this.props
-    // const { value } = this.state
+    // const { value } = this.props
+    const { value } = this.state
     return this.parseValueIn(value === '' || value === null ? undefined : value)
   }
 
@@ -116,12 +103,10 @@ export class BaseWidget extends React.Component<FieldPropsBaseT> {
     const value = this.getValue()
     const inputPros = {
       className: 'fok-form-item-input-control',
-      value: this._focused ? undefined : value,
-      defaultValue: value,
+      value,
       disabled,
       onChange: this._handleChange,
-      onBlur: this._handleBlur,
-      onFocus: this._handleFocus
+      onBlur: this._handleBlur
     }
 
     return inputPros

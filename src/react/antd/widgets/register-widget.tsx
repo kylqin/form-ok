@@ -1,5 +1,5 @@
 import { WidgetMap, WidgetOptionsT } from '../widget-map'
-import { DefaultReadonlyWidget, BaseWidget } from './base-widget'
+import { DefaultReadonlyWidget, BaseWidget } from './base-widget-f'
 
 /** 注册 widget */
 export function registerWidget (name: string, widgetOptions: WidgetOptionsT|BaseWidget) {

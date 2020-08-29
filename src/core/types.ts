@@ -108,6 +108,7 @@ export class FieldExtT extends FieldT {
   private __ok_preValue?: any
   private __ok_needSyncProps?: boolean = true
 
+  get valueDirty () { return this.__ok_needSyncValue }
   get propsDirty () { return this.__ok_needSyncProps }
 
   /** 同步 Field value */
@@ -119,7 +120,7 @@ export class FieldExtT extends FieldT {
     }
   }
   /** 标记 Field 需要同步值 */
-  public markNeedSyncValue (need = true) { this.__ok_needSyncValue = need }
+  public markNeedSyncValue (need = true) { this.__ok_needSyncValue = need; if (need) { this.__ok_needSyncProps = need } }
   /** 标记 Field 需要同步属性 */
   public markNeedSyncProps (need = true) { this.__ok_needSyncProps = need }
 

@@ -67,6 +67,7 @@ function actionChangeField (actions: ActionsT, formGroup: FormGroup, path: strin
   formGroup.updateData(path, value)
   formGroup.updateField(path, field => {
     field.markNeedSyncValue()
+    formGroup.eventBus.dispatchValueUpdate(path)
   })
 
   actionUtilTrigger(actions, formGroup, path, actionId)
@@ -81,6 +82,7 @@ function actionChangeFields (actions: ActionsT, formGroup: FormGroup, pathValueM
     formGroup.updateData(path, pathValueMap[path])
     formGroup.updateField(path, field => {
       field.markNeedSyncValue()
+      formGroup.eventBus.dispatchValueUpdate(path)
     })
   })
   actionUtilTrigger(actions, formGroup, paths, actionId)
@@ -103,7 +105,7 @@ function actionUtilTrigger (actions: ActionsT, formGroup: FormGroup, path: strin
   }).then(() => {
     formGroup.fields().forEach(field => {
       if (field!.propsDirty) {
-        formGroup.eventBus.dispatch(field!.path, {})
+        formGroup.eventBus.dispatchPropsUpdate(field!.path)
       }
     })
   })

@@ -1,24 +1,18 @@
-import React from 'react'
 import { Input } from 'antd'
-import { BaseWidget } from './base-widget'
+import React from 'react'
+import { useListenValue } from '../../hooks'
+import { FieldPropsBaseT, getAttrs, getInputProps } from './base-widget-f'
 import { registerWidgets } from './register-widget'
 
-export class InputWidget extends BaseWidget {
-  render () {
-    // console.log('this.getAttrs(), this.getInputProps()', this.getAttrs(), this.getInputProps())
-    // const { value, ...inputProps } = this.getInputProps()
-    const inputProps = this.getInputProps()
-    // console.log('inputProps ->', inputProps)
-    return <Input {...inputProps} />
-    // return <Input {...this.getAttrs()} />
-    // return <Input {...this.getAttrs()} {...this.getInputProps()} />
-  }
+export function InputWidget (props: FieldPropsBaseT) {
+  const { value: initialValue, ...inputProps } = getInputProps(props)
+  const value = useListenValue(props.commonProps.formGroup, props.path, initialValue)
+
+  return <Input {...inputProps} value={value} />
 }
 
-export class TextareaWidget extends BaseWidget {
-  render () {
-    return <Input.TextArea {...this.getAttrs()} {...this.getInputProps()} />
-  }
+export function TextareaWidget (props: FieldPropsBaseT) {
+  return <Input.TextArea {...getAttrs(props)} {...getInputProps(props)} />
 }
 
 const registered = registerWidgets({

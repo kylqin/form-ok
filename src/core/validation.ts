@@ -143,12 +143,12 @@ export function validateFields (validators: MultiValidatorDefineT[], values: any
 
 /** 触发 form 验证 */
 export async function triggerValidations (
-  formGroup: any,
+  Form: any,
   validate: (fromGroup: any, validateOptions: ValidateOptions) => FokValidateResult,
   validateOptions: ValidateOptions = defaultValidateOptions
 ): Promise<FokValidateResult> {
-  const formGroups = Array.isArray(formGroup) ? formGroup : [formGroup]
-  let errors = await Promise.all(formGroups.map(group => {
+  const Forms = Array.isArray(Form) ? Form : [Form]
+  let errors = await Promise.all(Forms.map(group => {
     group.actions.clearErrors();
       return group.actions.validate(null, validateOptions);
   }))
@@ -163,5 +163,5 @@ export async function triggerValidations (
       message: JSON.stringify(errors)
     };
   }
-  return validate(formGroup, validateOptions)
+  return validate(Form, validateOptions)
 }

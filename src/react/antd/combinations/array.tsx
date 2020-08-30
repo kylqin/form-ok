@@ -44,9 +44,9 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
     return {
       insert: (index: number) => {},
       remove: (index: number) => {
-        const { formGroup } = commonProps
-        const arr = (formGroup.field(path!)!.value || []) as any[]
-        formGroup.actions.changeField(path!, remove(arr, index), 'arr')
+        const { Form } = commonProps
+        const arr = (Form.field(path!)!.value || []) as any[]
+        Form.actions.changeField(path!, remove(arr, index), 'arr')
       },
       push: () => {}
     }
@@ -70,7 +70,7 @@ const ArrayItemWidget = (props: { arrField: FieldPropsT, commonProps: FormCommon
   const jointer = '[' + index + '].'
   const _properties = properties!.map(propField => {
     const newPath = path + jointer + propField.defineKey
-    const newPropField = commonProps.formGroup.field(newPath)!
+    const newPropField = commonProps.Form.field(newPath)!
     return newPropField
   })
 

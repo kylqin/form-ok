@@ -1,5 +1,5 @@
 import { FieldDefineT } from '/@/core/types'
-import { WatcherDefineT, FormGroup } from '../core/form-group'
+import { WatcherDefineT, Form } from '../core/form'
 
 export const  fields: FieldDefineT[] = [
   // { key: 'k1',  title: 'K1', validators: [(val: string) => ({ valid: val.startsWith('bo'), message: '要bo开头' })], 'c:hidden': g => g['k1'].startsWith('bo') },
@@ -32,9 +32,9 @@ export const watch: WatcherDefineT[] = [
   [['k3', 'k4'], (k3, k4, wOptions) => {
     console.log(k3, k4, wOptions)
     if (k3 === 'k3') {
-      (wOptions.formGroup as FormGroup).actions.changeField('k2', '2')
+      (wOptions.Form as Form).actions.changeField('k2', '2')
     } else {
-      (wOptions.formGroup as FormGroup).actions.changeField('k2', '8')
+      (wOptions.Form as Form).actions.changeField('k2', '8')
     }
   }]
 ]

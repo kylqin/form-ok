@@ -4,7 +4,7 @@ import './App.css'
 import { fields, watch, initialData } from './define-fields'
 // import './test'
 import { InputSet } from '/@/react/antd/input-set'
-import { useFormGroup } from '/@/react/hooks'
+import { useForm } from '/@/react/hooks'
 import { ContentBox } from '../react/antd/combinations/content-box'
 import { Input } from 'antd'
 
@@ -19,8 +19,8 @@ const WrappedInput = ({value, setValue, color, setColor}) => {
 }
 
 function App() {
-  const formGroup = useFormGroup({ fields, watch }, initialData)
-  // const formGroupV = useFormGroup({ fields: fieldsV })
+  const Form = useForm({ fields, watch }, initialData)
+  // const FormV = useForm({ fields: fieldsV })
   const [value, setValue] = useState()
   const [color, setColor] = useState()
 
@@ -29,10 +29,10 @@ function App() {
   return (
     <div className="App">
       <ContentBox title='Inputs'>
-        <InputSet formGroup={formGroup} />
+        <InputSet Form={Form} />
       </ContentBox>
       {/* <ContentBox title='Inputs Vertical'>
-        <InputSet formGroup={formGroupV} vertical />
+        <InputSet Form={FormV} vertical />
       </ContentBox> */}
       <WrappedInput value={value} setValue={setValue} color={color} setColor={setColor} />
     </div>

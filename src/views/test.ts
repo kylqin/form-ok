@@ -1,8 +1,8 @@
-import { FormGroup, createFormGroup } from "../core/form-group";
+import { Form, createForm } from "../core/form";
 import { ActionsT } from "../core/actions";
 import { FokValidateResult } from "../core/validation";
 
-const fg = createFormGroup({
+const fg = createForm({
   fields: [
     { key: 'k1',  title: 'K1', validators: [(val: string) => ({ valid: val.startsWith('bo'), message: '要bo开头' })], 'c:hidden': g => g['k1'].startsWith('bo') },
     { key: 'k2',  title: 'K2' },
@@ -32,7 +32,7 @@ const fg = createFormGroup({
     }]
   ],
   watch: [
-    [['k1', 'k2'], (k1, k2, { key, formGroup, actionId }) => {
+    [['k1', 'k2'], (k1, k2, { key, Form, actionId }) => {
       console.log(k1, k2, key, actionId)
 
       console.log('changeCount ->', changeCount)

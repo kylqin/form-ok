@@ -22,7 +22,7 @@ function parseValueOut (props: FieldPropsBaseT, value: any) {
 
 /** 解析进来的 value */
 function parseValueIn (props: FieldPropsBaseT, value: any) {
-  const { widget, commonProps: { formGroup } } = props
+  const { widget, commonProps: { Form } } = props
 
   // 解析进来的 value
   const vp = WidgetMap[widget].valueParser
@@ -37,7 +37,7 @@ function parseValueIn (props: FieldPropsBaseT, value: any) {
  * @param {Event|any} valueOrEvent 事件对象或新值
  */
 function handleChange (props: FieldPropsBaseT, valueOrEvent: Event|any, text?: string) {
-  const { path, labelPath, commonProps: { formGroup } } = props
+  const { path, labelPath, commonProps: { Form } } = props
   let value = valueOrEvent && valueOrEvent.target
     ? valueOrEvent.target.value
     : valueOrEvent
@@ -45,12 +45,12 @@ function handleChange (props: FieldPropsBaseT, valueOrEvent: Event|any, text?: s
   value = parseValueOut(props, value)
   if (labelPath) {
     text = parseValueOut(props, text)
-    formGroup.actions.changeFields({
+    Form.actions.changeFields({
       [path!]: value,
       [labelPath]: text
     })
   } else {
-    formGroup.actions.changeField(path!, value)
+    Form.actions.changeField(path!, value)
   }
 }
 
@@ -59,8 +59,8 @@ function handleChange (props: FieldPropsBaseT, valueOrEvent: Event|any, text?: s
  * @param {Event|any} valueOrEvent 事件对象或新值
  */
 function handleBlur (props: FieldPropsBaseT, valueOrEvent: Event|any) {
-  const { onBlur, value, text, commonProps: { formGroup } } = props
-  onBlur && onBlur(value, text, formGroup)
+  const { onBlur, value, text, commonProps: { Form } } = props
+  onBlur && onBlur(value, text, Form)
 }
 
 export function getValue (props: FieldPropsBaseT) {

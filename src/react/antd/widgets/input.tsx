@@ -6,7 +6,7 @@ import { registerWidgets } from '../register-widget'
 
 export function InputWidget (props: FieldPropsBaseT) {
   const { value: initialValue, ...inputProps } = getInputProps(props)
-  const value = useListenValue(props.commonProps.formGroup, props.path, initialValue)
+  const value = useListenValue(props.commonProps.Form, props.path, initialValue)
 
   return <Input {...inputProps} value={value} />
 }

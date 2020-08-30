@@ -9,7 +9,7 @@ import { MultiValidatorDefineT, ValidateCombine } from './validation';
 
 type WatcherTriggerInfo = {
   path?: string,
-  formGroup: FormGroup,
+  Form: Form,
   actionId?: string
 }
 
@@ -21,20 +21,20 @@ type WatchersMap = DepMap<WatcherDefineT>
 type ComputesMap = DepMap<ComputePropT>
 type ComputedMap = Map<string, Map<string, any>>
 
-export type FormGroupSchema = {
+export type FormSchema = {
   fields?: FieldDefineT[],
   validators?: MultiValidatorDefineT[],
   watch?: WatcherDefineT[],
 }
 
-export function createFormGroup(
-  schema: FormGroupSchema,
+export function createForm(
+  schema: FormSchema,
   initalData: PlainObject
 ) {
-  return new FormGroup(schema.fields, schema.validators, schema.watch, initalData)
+  return new Form(schema.fields, schema.validators, schema.watch, initalData)
 }
 
-export class FormGroup {
+export class Form {
   private __fieldSchema: FieldExtT[]
   private __fieldMap: FieldMap
   private __dataSet: PlainObject
@@ -66,7 +66,7 @@ export class FormGroup {
     // setAllow(allow => ({ ...allow })) // TODO: hack 强制刷新, FXIME
   }
 
-  updateSchema (schema: FormGroupSchema) {
+  updateSchema (schema: FormSchema) {
     if (schema.watch) {
       this.watch = schema.watch
     }

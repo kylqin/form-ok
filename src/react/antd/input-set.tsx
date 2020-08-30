@@ -8,7 +8,7 @@ import './widgets'
 
 import { FieldExtT, FieldPropsT } from '/@/core/types'
 import { FormCommonPropsT, createMemoPropsGetter } from '/@/core/fields'
-import { FormGroup } from '/@/core/form-group'
+import { Form } from '../../core/form'
 
 export type FormCommonPropsExtT = FormCommonPropsT & {
   vertical: boolean
@@ -73,7 +73,7 @@ export function renderCtrls (fields: FieldExtT[], commonProps: FormCommonPropsEx
 }
 
 export type InputSetPropsT = {
-  formGroup: FormGroup
+  Form: Form
   fieldsSelector?: string,
   vertical?: boolean
   readonly?: boolean
@@ -82,9 +82,9 @@ export type InputSetPropsT = {
 }
 
 export function InputSet (props: InputSetPropsT) {
-  const { formGroup, vertical = false, readonly = false, column = 3, gap = 20 } = props
+  const { Form, vertical = false, readonly = false, column = 3, gap = 20 } = props
 
-  const fields: FieldExtT[] = formGroup.fieldSchema
+  const fields: FieldExtT[] = Form.fieldSchema
 
   const iptSetClassName = 'fok-form-input-set' +
     ` fok-form-input-set-column-${column}` +
@@ -92,7 +92,7 @@ export function InputSet (props: InputSetPropsT) {
     (vertical ? ' fok-form-input-set-vertical' : '') +
     (readonly ? ' fok-form-input-set-readonly' : '')
 
-  const commonProps: FormCommonPropsExtT = { formGroup, readonly, vertical, column, gap, disabled: false }
+  const commonProps: FormCommonPropsExtT = { Form, readonly, vertical, column, gap, disabled: false }
   createMemoPropsGetter(commonProps)
 
   const FormComps = renderCtrls(fields, commonProps)

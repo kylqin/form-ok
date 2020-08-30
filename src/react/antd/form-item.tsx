@@ -7,8 +7,8 @@ import '/@/react/form-ok-react.scss'
 import { useListenProps } from '/@/react/hooks'
 
 export function FormItem (props: { field: FieldPropsT, commonProps: FormCommonPropsExtT, children: any }) {
-  const { formGroup, vertical, column, gap } = props.commonProps
-  const _props = useListenProps(formGroup, props.field.path, props.field, props.commonProps)
+  const { Form, vertical, column, gap } = props.commonProps
+  const _props = useListenProps(Form, props.field.path, props.field, props.commonProps)
   const { path, title, required, disabled, readonly, hidden, errors, tooltip, widget, span = 1 } = _props
   const { children } = props
 

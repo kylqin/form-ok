@@ -1,36 +1,36 @@
 import { useEffect, useMemo, useState } from 'react'
 import { FormCommonPropsT } from '/@/core/fields'
-import { createFormGroup, FormGroup, FormGroupSchema } from '/@/core/form-group'
+import { createForm, Form, FormSchema } from '../core/form'
 import { PlainObject } from '/@/core/utils'
 
-export function useFormGroup (schema: FormGroupSchema, initialData: PlainObject = {}) {
-  const formGroup = useMemo(() => { return createFormGroup(schema, initialData) }, [])
+export function useForm (schema: FormSchema, initialData: PlainObject = {}) {
+  const Form = useMemo(() => { return createForm(schema, initialData) }, [])
 
-  return formGroup
+  return Form
 }
 
-export function useListenProps (formGroup: FormGroup, path: string, initialProps: PlainObject, commonProps: FormCommonPropsT) {
+export function useListenProps (Form: Form, path: string, initialProps: PlainObject, commonProps: FormCommonPropsT) {
   const [props, setProps] = useState(initialProps)
 
   useEffect(() => {
     const updateProps = () => {
-      const newProps = commonProps.propsGetter!(formGroup.field(path)!)
+      const newProps = commonProps.propsGetter!(Form.field(path)!)
       console.log('useListenProps updateProps', path, newProps)
       setProps(newProps)
     }
 
-    return formGroup.eventBus.listenPropsUpdate(path, updateProps)
+    return Form.eventBus.listenPropsUpdate(path, updateProps)
   }, [path])
 
   return props
 }
 
-export function useListenValue (formGroup: FormGroup, path: string, initialValue: any) {
+export function useListenValue (Form: Form, path: string, initialValue: any) {
   const [value, setValue] = useState(initialValue)
   useEffect(() => {
-    return formGroup.eventBus.listenValueUpdate(path, () => {
-      console.log('uselistenValue updateValue ->', path, formGroup.field(path)!.value)
-      setValue(formGroup.field(path)!.value)
+    return Form.eventBus.listenValueUpdate(path, () => {
+      console.log('uselistenValue updateValue ->', path, Form.field(path)!.value)
+      setValue(Form.field(path)!.value)
     })
   }, [path])
   return value

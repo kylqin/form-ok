@@ -1,12 +1,12 @@
 import _ from 'lodash'
-import { FormGroup } from './form-group'
+import { Form } from './form'
 import { createFieldExt, FieldDefineT, FieldExtT, FieldPropsT } from './types'
 import { genID, notNull } from './utils'
 
 type PropsGetter = (field: FieldExtT) => FieldPropsT
 
 export type FormCommonPropsT = {
-  formGroup: FormGroup
+  Form: Form
   readonly: boolean
   disabled: boolean
   propsGetter?: PropsGetter
@@ -19,7 +19,7 @@ const UiProps = new Set(['readonly', 'disabled', 'hidden'])
 
 /** 设置计算属性 */
 function setComputeProps (field: FieldExtT, commonProps: FormCommonPropsT) {
-  const { formGroup } = commonProps
+  const { Form } = commonProps
 
   if (field.compute) {
     Object.keys(field.compute).forEach(propName => {
@@ -34,13 +34,13 @@ function setComputeProps (field: FieldExtT, commonProps: FormCommonPropsT) {
           (field as any)[propName] = true
         } else {
           // 否则, 计算之
-          // (field as any)[propName] = field.compute![propName][1](Get, field, formGroup)
-          (field as any)[propName] = formGroup.computed(field.path, propName)
+          // (field as any)[propName] = field.compute![propName][1](Get, field, Form)
+          (field as any)[propName] = Form.computed(field.path, propName)
         }
       } else {
         // 否则， 计算之
-        // (field as any)[propName] = field.compute![propName][1](Get, field, formGroup)
-        (field as any)[propName] = formGroup.computed(field.path, propName)
+        // (field as any)[propName] = field.compute![propName][1](Get, field, Form)
+        (field as any)[propName] = Form.computed(field.path, propName)
       }
     })
   }
@@ -61,15 +61,15 @@ function setUIProps (field: FieldExtT, commonProps: FormCommonPropsT) {
 
 /** 生成渲染 Field 需要的属性 */
 function makeFieldProps (field: FieldExtT, commonProps: FormCommonPropsT): FieldPropsT {
-  const { formGroup, readonly } = commonProps
-  // 获取 value, 传入的 field 没有值, 通过 formGroup.field 从 fromGroup.__fieldMap 中取值
-  const copied = FieldPropsT.fromFieldExtT(formGroup.field(field.path)!)
+  const { Form, readonly } = commonProps
+  // 获取 value, 传入的 field 没有值, 通过 Form.field 从 fromGroup.__fieldMap 中取值
+  const copied = FieldPropsT.fromFieldExtT(Form.field(field.path)!)
 
   setComputeProps(copied, commonProps)
   setUIProps(copied, commonProps)
 
   // 设置 text
-  copied.text = copied.labelPath ? _.get(formGroup.data, copied.labelPath) : ''
+  copied.text = copied.labelPath ? _.get(Form.data, copied.labelPath) : ''
 
   // 全局 readonly 覆盖
   copied.readonly = readonly || copied.readonly

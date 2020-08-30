@@ -1,5 +1,5 @@
 import { createMemoPropsGetter, FormCommonPropsT } from './fields';
-import { FormGroup } from './form-group';
+import { Form } from './form';
 import { TaskManager } from './task-manager';
 import { FieldDefineT, FieldExtT, FieldPropsT } from './types';
 import { PlainObject } from './utils';
@@ -8,7 +8,7 @@ import { ValidateCombine, validateField, validateFields, ValidateOptions } from 
 export class ActionsT {
   public _taskManager = new TaskManager()
 
-  constructor (private formGroup: FormGroup) {}
+  constructor (private Form: Form) {}
 
   init (data: PlainObject) {}
 
@@ -16,24 +16,24 @@ export class ActionsT {
 
   changeField (path: string, value: any, actionId?: string) {
     console.log('changeField ->', path, value, actionId)
-    actionChangeField(this, this.formGroup, path, value, actionId)
+    actionChangeField(this, this.Form, path, value, actionId)
   }
 
   changeFields (changeMap: PlainObject, actionId?: string) {
-    actionChangeFields(this, this.formGroup, changeMap, actionId)
+    actionChangeFields(this, this.Form, changeMap, actionId)
   }
 
   deleteFeild (path: string) {}
 
   setError (path: string, message: string) {
     console.log('setError ->', path, message)
-    this.formGroup.updateField(path, (field: FieldExtT) => {
+    this.Form.updateField(path, (field: FieldExtT) => {
       field.errors = [{ message: message }]
     })
   }
 
   deleteError (path: string) {
-    this.formGroup.updateField(path, (field: FieldExtT) => {
+    this.Form.updateField(path, (field: FieldExtT) => {
       field.errors = []
     })
   }
@@ -44,75 +44,75 @@ export class ActionsT {
   submitDone () {}
 
   validate (path: null|string|string[], validateOptions: ValidateOptions) {
-    return actionValidate(this, this.formGroup, path, validateOptions)
+    return actionValidate(this, this.Form, path, validateOptions)
   }
 }
 
 /** initial data */
-function actionInit (actions: ActionsT, formGroup: FormGroup, data: PlainObject) {
-  formGroup.data = data
+function actionInit (actions: ActionsT, Form: Form, data: PlainObject) {
+  Form.data = data
 }
 
 /** new field */
-function actionNewField (actions: ActionsT, formGroup: FormGroup, field: FieldDefineT) {
-  // TODO: 合并到 formGroup 现有的 fieldSchema 和 fieldMap 中
+function actionNewField (actions: ActionsT, Form: Form, field: FieldDefineT) {
+  // TODO: 合并到 Form 现有的 fieldSchema 和 fieldMap 中
 }
 
 /** changeField 改变 field 的 value 值 */
-function actionChangeField (actions: ActionsT, formGroup: FormGroup, path: string, value: any, actionId?: string) {
+function actionChangeField (actions: ActionsT, Form: Form, path: string, value: any, actionId?: string) {
   // 改变 data
-  formGroup.updateData(path, value)
-  formGroup.updateField(path, field => {
+  Form.updateData(path, value)
+  Form.updateField(path, field => {
     field.markNeedSyncValue()
-    formGroup.eventBus.dispatchValueUpdate(path)
+    Form.eventBus.dispatchValueUpdate(path)
   })
 
-  actionUtilTrigger(actions, formGroup, path, actionId)
+  actionUtilTrigger(actions, Form, path, actionId)
 }
 
 /** changeFields 根据 pathValueMap 改变 field 的 value */
-function actionChangeFields (actions: ActionsT, formGroup: FormGroup, pathValueMap: PlainObject, actionId?: string) {
+function actionChangeFields (actions: ActionsT, Form: Form, pathValueMap: PlainObject, actionId?: string) {
   const paths = Object.keys(pathValueMap)
   // const values = []
   // 改变 data
   paths.forEach(path => {
-    formGroup.updateData(path, pathValueMap[path])
-    formGroup.updateField(path, field => {
+    Form.updateData(path, pathValueMap[path])
+    Form.updateField(path, field => {
       field.markNeedSyncValue()
-      formGroup.eventBus.dispatchValueUpdate(path)
+      Form.eventBus.dispatchValueUpdate(path)
     })
   })
-  actionUtilTrigger(actions, formGroup, paths, actionId)
+  actionUtilTrigger(actions, Form, paths, actionId)
 }
 
 /** trigger onChange events & validation & watch & compute */
-function actionUtilTrigger (actions: ActionsT, formGroup: FormGroup, path: string|string[], actionId?: string) {
+function actionUtilTrigger (actions: ActionsT, Form: Form, path: string|string[], actionId?: string) {
   // TODO: 触发 onChange 事件 吗？
   // 触发 watch
-  actionUtilTriggerWatch(actions, formGroup, path, actionId)
+  actionUtilTriggerWatch(actions, Form, path, actionId)
   // 触发 validation
   actionUtilTriggerValidation(actions, path)
   // 触发 compute
-  actionUtilTriggerCompute(actions, formGroup, path, actionId)
+  actionUtilTriggerCompute(actions, Form, path, actionId)
 
   // TODO: nextTick 执行 tasks
   Promise.resolve().then(() => {
     // console.log(actions._taskManager)
     actions._taskManager.run()
   }).then(() => {
-    formGroup.fields().forEach(field => {
+    Form.fields().forEach(field => {
       if (field!.propsDirty) {
-        formGroup.eventBus.dispatchPropsUpdate(field!.path)
+        Form.eventBus.dispatchPropsUpdate(field!.path)
       }
     })
   })
 }
 
 /** 触发 watch */
-function actionUtilTriggerWatch (actions: ActionsT, formGroup: FormGroup, path: string|string[], actionId?: string) {
-  const watchers = formGroup.fieldWatchers(path)
+function actionUtilTriggerWatch (actions: ActionsT, Form: Form, path: string|string[], actionId?: string) {
+  const watchers = Form.fieldWatchers(path)
   watchers.forEach(watcher => {
-    actions._taskManager.add(() => watcher.handler(...watcher.values, { actionId, path, formGroup }))
+    actions._taskManager.add(() => watcher.handler(...watcher.values, { actionId, path, Form }))
   })
 }
 
@@ -122,12 +122,12 @@ function actionUtilTriggerValidation (actions: ActionsT, path: string|string[]) 
 }
 
 /** 触发 watch */
-function actionUtilTriggerCompute (actions: ActionsT, formGroup: FormGroup, path: string|string[], actionId?: string) {
-  const computes = formGroup.fieldComputes(path)
+function actionUtilTriggerCompute (actions: ActionsT, Form: Form, path: string|string[], actionId?: string) {
+  const computes = Form.fieldComputes(path)
   computes.forEach(compute => {
     actions._taskManager.add(() => {
       const [path, prop] = compute.pathProp.split(':')
-      formGroup.updateComputed(path, prop, compute.handler(...compute.values, { actionId, path, formGroup }))
+      Form.updateComputed(path, prop, compute.handler(...compute.values, { actionId, path, Form }))
     })
   })
 }
@@ -185,24 +185,24 @@ const validateCombines = async (actions: ActionsT, combines: ValidateCombine[], 
 /** 验证 => Promise<[path|path[], message][]> */
 async function actionValidate (
   actions: ActionsT,
-  formGroup: FormGroup,
+  Form: Form,
   path: null|string|string[],
   validatorOptions: ValidateOptions): Promise<ActionValidateResultT> {
-  const commonProps: FormCommonPropsT = { formGroup, readonly: false, disabled: false }
+  const commonProps: FormCommonPropsT = { Form, readonly: false, disabled: false }
   createMemoPropsGetter(commonProps)
 
   // console.log('commonProps ->', commonProps)
 
   if (typeof path === 'string') {
     // 验证 单个 字段
-    const field = formGroup.field(path)
+    const field = Form.field(path)
     if (!field) {
       // 找不到 Field
       return []
     }
     const fieldProps = commonProps.propsGetter!(field)
 
-    const combines = formGroup.fieldValidators(path)
+    const combines = Form.fieldValidators(path)
 
     if (!combines.length) {
       // 如果没有 组合 验证, 则只执行 Field 自己的验证器
@@ -218,8 +218,8 @@ async function actionValidate (
     }
   } else {
     // 验证 多个字段 / 所有字段
-    const combines = formGroup.fieldValidators(path) // path is null|string[]
-    const fieldPropsArr = formGroup.fields(path).filter(f => f).map(f => commonProps.propsGetter!(f!))
+    const combines = Form.fieldValidators(path) // path is null|string[]
+    const fieldPropsArr = Form.fields(path).filter(f => f).map(f => commonProps.propsGetter!(f!))
     const validateSingelsResult = await Promise.all(fieldPropsArr.map(f => validateSingle(actions, f)))
         .then(errors => errors.filter(e => e.length).flatMap(e => e))
     if (combines.length) {

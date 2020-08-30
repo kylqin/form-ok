@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { FormGroup } from './form-group';
+import { Form } from './form';
 import { clone, PlainObject } from './utils';
 import { FokValidatorDefineT } from './validation';
 
@@ -20,7 +20,7 @@ export type EnumItemT = {
 type ComputePropsParamEnv = {
   data: any,
   field: FieldExtT,
-  formGroup: FormGroup
+  Form: Form
 }
 
 /** [deps, computeFn] */
@@ -28,7 +28,7 @@ export type ComputePropDefineT = [string[], (...fieldValuesAndEnv: (any|ComputeP
 /** [deps, [path:prop, computeFn]] */
 export type ComputePropT = [string[], [string, (...fieldValuesAndEnv: (any|ComputePropsParamEnv)[]) => any]]
 
-export type OnChangeCallbackT = (value: any, text: string, formGroup: FormGroup) => void
+export type OnChangeCallbackT = (value: any, text: string, Form: Form) => void
 
 export type FieldTypeT = 'number' | 'string' | 'boolean' | 'object' | 'array' | 'date'
 // export enum  FieldTypeT

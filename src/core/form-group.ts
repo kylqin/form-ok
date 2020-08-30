@@ -250,7 +250,7 @@ function utilGetFields (fieldMap: FieldMap, dataSet: PlainObject, paths: string[
         // 转换: -> arr[].prop
         const pathWithoutIndex = utilEmptyArrPropPath(path)
         // 为数组项构造新的 Field
-        const toCache = fieldMap.get(pathWithoutIndex)?.clone()
+        const toCache = fieldMap.get(pathWithoutIndex)!.clone()
         if (toCache) {
           toCache.path = path
 

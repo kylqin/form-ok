@@ -38,7 +38,7 @@ const config: UserConfig = {
   //   }
   // }],
   optimizeDeps: {
-    include: ['antd', 'tui-calendar', 'moment', '@ant-design/icons'],
+    include: ['antd', 'moment', '@ant-design/icons'],
   },
   cssPreprocessOptions:{
     // antd需要开启这个才能引用 antd.less

@@ -8,10 +8,10 @@ export const  fields: FieldDefineT[] = [
   //   { key: 'kk3',  title: 'KK3', 'c:tooltip': g => g['.kk2'] === 'kk2' ? '这是一个完美的の没有bug的tooltip' : '' },
   //   { key: 'kk4',  title: 'KK4'  },
   // ]},
-  // { key: 'obj', widget: 'object', title: 'Object', properties: [
-  //   { key: 'k2',  title: 'K2', validators: [v => ({ valid: v !== '2', message: '不能是2' })] },
-  //   { key: 'k3',  title: 'K3', tooltip: '这是一个完美的の没有bug的tooltip' },
-  // ]},
+  { key: 'obj', widget: 'object', title: 'Object', properties: [
+    { key: 'k2',  title: 'K2', validators: [v => ({ valid: v !== '2', message: '不能是2' })] },
+    { key: 'k3',  title: 'K3', tooltip: '这是一个完美的の没有bug的tooltip' },
+  ]},
   // { widget: 'group', title: 'Group', properties: [
   //   { key: 'k4',  title: 'K4', required: true },
   //   { key: 'k8',  title: 'K8', span: 2 },

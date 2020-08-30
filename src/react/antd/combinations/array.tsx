@@ -12,7 +12,13 @@ const insert = (arr: any[], idx: number, val: any) => arr.slice(0, idx).concat([
 const remove = (arr: any[], idx: number) => arr.slice(0, idx).concat(arr.slice(idx + 1))
 const push = (arr: any[], val: any) => arr.concat([val])
 
-function useArrayIds (count: number) {
+type ArrayActions = {
+  insert: (idx: number) => void,
+  remove: (idx: number) => void,
+  push: () => void
+}
+
+function useArrayIds (count: number): [string[], ArrayActions] {
   const [initialized, setInitialized] = useState(false)
   const [ids, setIds] = useState<string[]>(initialized || setInitialized(true) || new Array(count).fill(true).map(() => createArrayItemId()))
   const actions = useMemo(() => {
@@ -24,24 +30,22 @@ function useArrayIds (count: number) {
   },
   [])
 
-  return [ids, actions, setIds]
+  return [ids, actions]
 }
 
 export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommonPropsExtT }) => {
-  const { value, readonly, disabled, hidden, path, title, properties } = props.field
+  const { value, hidden, path, title } = props.field
   const { commonProps } = props
 
-  const [valueArr, setValueArr] = useState(value || [])
-  const [ids, idsActions, setIds] = useArrayIds(valueArr.length)
-  console.log(ids, valueArr)
+  const [ids, idsActions] = useArrayIds((value || []).length)
+  console.log(ids)
 
-  const valueActions = useMemo(() => {
+  const valueActions: ArrayActions = useMemo(() => {
     return {
       insert: (index: number) => {},
       remove: (index: number) => {
         const { formGroup } = commonProps
         const arr = (formGroup.field(path!)!.value || []) as any[]
-        // console.log('arr', arr, index)
         formGroup.actions.changeField(path!, remove(arr, index), 'arr')
       },
       push: () => {}
@@ -56,15 +60,13 @@ export const ArrayWidget = (props: { field: FieldPropsT, commonProps: FormCommon
         <ArrayItemWidget arrField={props.field} commonProps={commonProps} id={id} index={idx} key={id} removeItem={() => { idsActions.remove(idx); valueActions.remove(idx) }}/>
       )}
       <Button type='dashed' block icon={<PlusOutlined />} onClick={() => idsActions.push()} />
-      {/* <span onClick={() => idsActions.insert(2)}>Insert at 2</span>
-      <span onClick={() => { idsActions.remove(0), valueActions.remove(0) }}>Remove at 0</span> */}
     </ContentBox>
   </div>
 }
 
 const ArrayItemWidget = (props: { arrField: FieldPropsT, commonProps: FormCommonPropsExtT, id: string, index: number, removeItem: () => void }) => {
-  const { readonly, disabled, hidden, path, title, properties } = props.arrField
-  const { commonProps, id, index, removeItem } = props
+  const { path, properties } = props.arrField
+  const { commonProps, index, removeItem } = props
   const jointer = '[' + index + '].'
   const _properties = properties!.map(propField => {
     const newPath = path + jointer + propField.defineKey

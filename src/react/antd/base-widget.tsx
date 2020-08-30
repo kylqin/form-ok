@@ -1,9 +1,11 @@
 import React from 'react'
-import { FormCommonPropsExtT } from '../input-set'
-import { WidgetMap } from '../widget-map'
+import { FormCommonPropsExtT } from './input-set'
+import { WidgetMap } from './widget-map'
 import { FieldPropsT } from '/@/core/types'
 
 export type FieldPropsBaseT = Omit<FieldPropsT, 'syncFieldValue|markNeedSyncValue|clone'> & { commonProps: FormCommonPropsExtT }
+
+export type BaseWidget = (props: FieldPropsBaseT) => JSX.Element
 
 export function getWidgetOptions (props: FieldPropsBaseT) { return WidgetMap[props.widget] }
 
@@ -95,8 +97,6 @@ export function getInputProps (props: FieldPropsBaseT) {
 
   return inputPros
 }
-
-export type BaseWidget = (props: FieldPropsBaseT) => JSX.Element
 
 export function DefaultReadonlyWidget (props: FieldPropsBaseT) {
   let value = getValue(props)

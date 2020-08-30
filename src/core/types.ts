@@ -1,7 +1,7 @@
 import _ from 'lodash';
-import { FokValidatorDefineT } from './validation'
-import { FormGroup } from './form-group'
-import { clone } from './utils';
+import { FormGroup } from './form-group';
+import { clone, PlainObject } from './utils';
+import { FokValidatorDefineT } from './validation';
 
 export type ValueParserT = {
   toData: (value: any, field: FieldPropsT) => any
@@ -10,11 +10,6 @@ export type ValueParserT = {
 
 export class ErrorT {
   constructor(public message: string) {}
-}
-
-
-export type PlainObject = {
-  [prop: string]: any
 }
 
 export type EnumItemT = {
@@ -32,6 +27,8 @@ type ComputePropsParamEnv = {
 export type ComputePropDefineT = [string[], (...fieldValuesAndEnv: (any|ComputePropsParamEnv)[]) => any]
 /** [deps, [path:prop, computeFn]] */
 export type ComputePropT = [string[], [string, (...fieldValuesAndEnv: (any|ComputePropsParamEnv)[]) => any]]
+
+export type OnChangeCallbackT = (value: any, text: string, formGroup: FormGroup) => void
 
 export type FieldTypeT = 'number' | 'string' | 'boolean' | 'object' | 'array' | 'date'
 // export enum  FieldTypeT
@@ -57,35 +54,6 @@ export class FieldT {
     public properties?: FieldT[]
   ) {}
 }
-
-export function createField ({ path, labelPath, title, value, errors, required, validators, type, enums, widget, attrs, properties }: { [path: string]: any }) {
-  return new FieldT(path, labelPath, title, value, errors, required, validators, type, enums, widget, attrs, properties)
-}
-
-export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
-  const { path, key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, /** */readonly, ...restProps } = fieldDefine
-  const extField = new FieldExtT(path || key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
-  const restPropNames = Object.keys(restProps)
-
-  // 设置 defineKey
-  extField.defineKey = key
-
-  extField.readonly = readonly
-  extField.exts = restProps
-
-  // 设置 compute
-  extField.compute = restPropNames.reduce((acc: { [prop: string]: ComputePropDefineT }, propName) => {
-    if (propName.startsWith('c:')) {
-      const prop = propName.slice(2)
-      acc[prop] = restProps[propName]
-    }
-    return acc
-  }, {})
-
-  return extField
-}
-
-export type OnChangeCallbackT = (value: any, text: string, formGroup: FormGroup) => void
 
 export class FieldExtT extends FieldT {
   public defineKey!: string
@@ -128,10 +96,6 @@ export class FieldExtT extends FieldT {
   public clone () { return clone(this, new FieldExtT()) as FieldExtT }
 }
 
-// export type FieldPropsT = {
-//   field: FieldExtT
-//   props: FieldExtT
-// }
 export class FieldPropsT extends FieldExtT {
   public text: string = ''
   public disabled?: boolean
@@ -150,7 +114,35 @@ export class FieldPropsT extends FieldExtT {
 }
 
 export interface FieldDefineT extends FieldExtT {
+  properties?: FieldDefineT[],
   key: string,
   labelKey?: string,
   [path: string]: any
+}
+
+export function createField ({ path, labelPath, title, value, errors, required, validators, type, enums, widget, attrs, properties }: { [path: string]: any }) {
+  return new FieldT(path, labelPath, title, value, errors, required, validators, type, enums, widget, attrs, properties)
+}
+
+export function createFieldExt (fieldDefine: FieldDefineT): FieldExtT {
+  const { path, key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties, /** */readonly, ...restProps } = fieldDefine
+  const extField = new FieldExtT(path || key, labelKey, title, value, errors, required, validators, type, enums, widget, attrs, properties)
+  const restPropNames = Object.keys(restProps)
+
+  // 设置 defineKey
+  extField.defineKey = key
+
+  extField.readonly = readonly
+  extField.exts = restProps
+
+  // 设置 compute
+  extField.compute = restPropNames.reduce((acc: { [prop: string]: ComputePropDefineT }, propName) => {
+    if (propName.startsWith('c:')) {
+      const prop = propName.slice(2)
+      acc[prop] = restProps[propName]
+    }
+    return acc
+  }, {})
+
+  return extField
 }

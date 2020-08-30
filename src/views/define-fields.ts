@@ -17,7 +17,7 @@ export const  fields: FieldDefineT[] = [
   //   { key: 'k8',  title: 'K8', span: 2 },
   // ]},
 
-  { key: 'k2',  title: 'K2' },
+  { key: 'k2',  title: 'K2', validators: [v => ({ valid: v !== '2', message: '不能是2' })] },
   { key: 'k3',  title: 'K3' },
   { key: 'k4',  title: 'K4'  },
   // { key: 'k9',  title: 'K9', hidden: true },

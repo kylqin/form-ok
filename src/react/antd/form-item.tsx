@@ -1,10 +1,10 @@
 import { QuestionCircleOutlined } from '@ant-design/icons'
 import { Tooltip } from 'antd'
 import React from 'react'
-import '../form-ok-react.scss'
-import { useListenProps } from '../hooks'
 import { FormCommonPropsExtT } from './input-set'
 import { FieldPropsT } from '/@/core/types'
+import '/@/react/form-ok-react.scss'
+import { useListenProps } from '/@/react/hooks'
 
 export function FormItem (props: { field: FieldPropsT, commonProps: FormCommonPropsExtT, children: any }) {
   const { formGroup, vertical, column, gap } = props.commonProps

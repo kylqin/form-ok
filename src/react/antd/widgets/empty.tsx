@@ -1,5 +1,5 @@
 import React from 'react'
-import { registerWidgets } from './register-widget'
+import { registerWidgets } from '../register-widget'
 
 
 /** 占位 */

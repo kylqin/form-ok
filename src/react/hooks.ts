@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FormCommonPropsExtT } from './antd/input-set'
+import { FormCommonPropsT } from '/@/core/fields'
 import { createFormGroup, FormGroup, FormGroupSchema } from '/@/core/form-group'
-import { PlainObject } from '/@/core/types'
+import { PlainObject } from '/@/core/utils'
 
 export function useFormGroup (schema: FormGroupSchema, initialData: PlainObject = {}) {
   const formGroup = useMemo(() => { return createFormGroup(schema, initialData) }, [])
@@ -9,7 +9,7 @@ export function useFormGroup (schema: FormGroupSchema, initialData: PlainObject 
   return formGroup
 }
 
-export function useListenProps (formGroup: FormGroup, path: string, initialProps: PlainObject, commonProps: FormCommonPropsExtT) {
+export function useListenProps (formGroup: FormGroup, path: string, initialProps: PlainObject, commonProps: FormCommonPropsT) {
   const [props, setProps] = useState(initialProps)
 
   useEffect(() => {

@@ -1,12 +1,10 @@
 import React from 'react'
-import { BaseWidget } from './base-widget'
-import { registerWidgets } from './register-widget'
+import { FieldPropsBaseT, getValue } from '../base-widget'
+import { registerWidgets } from '../register-widget'
 
-class TextWidget extends BaseWidget {
-  render () {
-    const { value } = this.props
-    return <div className='fok-form-item-control-readonly'>{value || this.getAttrs.value}</div>
-  }
+function TextWidget (props: FieldPropsBaseT) {
+  const { value } = props
+  return <div className='fok-form-item-control-readonly'>{value || getValue(props)}</div>
 }
 
 const registered = registerWidgets({

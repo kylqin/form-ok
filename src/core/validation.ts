@@ -23,24 +23,6 @@ export type ValidateCombine = {
   values: any[]
 }
 
-// type PenddingAsyncValidatorT = { path: string, exec: AsyncValidatorT }
-
-/** Async Validation */
-// const AsyncValidators = {
-//   current: [],
-//   clear: () => { AsyncValidators.current = [] },
-//   add: (asyncValidator: AsyncValidatorT, path: string) => {
-//     // 替换重复的 path
-//     _.remove(AsyncValidators.current, v => v.path === path)
-//     AsyncValidators.current.push({ path, exec: asyncValidator })
-//   },
-//   validate: () => {
-//     const current = AsyncValidators.current
-//     AsyncValidators.clear()
-//     return Promise.all(current.map(v => v.exec()))
-//   }
-// }
-
 export type ValidateOptions = {
   ignoreRequired: boolean,
   validatorMap: {

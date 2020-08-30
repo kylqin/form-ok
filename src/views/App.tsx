@@ -1,6 +1,5 @@
 import 'antd/dist/antd.css'
 import React, { useState } from 'react'
-// import { FormItem } from '../react/antd/form-item'
 import './App.css'
 import { fields, watch, initialData } from './define-fields'
 // import './test'
@@ -8,8 +7,6 @@ import { InputSet } from '/@/react/antd/input-set'
 import { useFormGroup } from '/@/react/hooks'
 import { ContentBox } from '../react/antd/combinations/content-box'
 import { Input } from 'antd'
-// import { InputSet } from '../react/antd/input-set'
-// import { useFormGroup } from '../react/hooks'
 
 
 

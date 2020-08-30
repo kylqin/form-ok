@@ -1,6 +1,6 @@
 import _ from 'lodash'
-import { FieldExtT, PlainObject, FieldPropsT, FieldDefineT, createFieldExt } from './types'
-import { genID, notNull } from './utils'
+import { FieldExtT, FieldPropsT, FieldDefineT, createFieldExt } from './types'
+import { genID, notNull, PlainObject } from './utils'
 import { FormGroup } from './form-group'
 
 type PropsGetter = (field: FieldExtT) => FieldPropsT

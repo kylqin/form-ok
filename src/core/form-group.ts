@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import { ActionsT } from './actions';
+import { createMapByDeps, DepMap, getByDeps } from './dep-map';
 import { EventBus } from './events';
 import { normalizeFields } from './fields';
-import { ComputePropT, createFieldExt, FieldDefineT, FieldExtT, PlainObject } from './types';
-import { isPlain, utilEmptyArrPropPath, utilIsArrPropPath, utilIsEmptyArrPropPath } from './utils';
+import { ComputePropT, createFieldExt, FieldDefineT, FieldExtT } from './types';
+import { isPlain, PlainObject, utilEmptyArrPropPath, utilIsArrPropPath, utilIsEmptyArrPropPath } from './utils';
 import { MultiValidatorDefineT, ValidateCombine } from './validation';
-import { DepMap, createMapByDeps, getByDeps } from './dep-map'
 
 type WatcherTriggerInfo = {
   path?: string,

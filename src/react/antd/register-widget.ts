@@ -1,9 +1,9 @@
-import { WidgetMap, WidgetOptionsT } from '../widget-map'
-import { DefaultReadonlyWidget, BaseWidget } from './base-widget-f'
+import { WidgetMap, WidgetOptionsT } from './widget-map'
+import { DefaultReadonlyWidget, BaseWidget } from './base-widget'
 
 /** 注册 widget */
 export function registerWidget (name: string, widgetOptions: WidgetOptionsT|BaseWidget) {
-  WidgetMap[name] = ((widgetOptions as WidgetOptionsT).widget ? widgetOptions : { widget: widgetOptions }) as WidgetOptionsT
+  WidgetMap[name] = typeof widgetOptions === 'function' ? { widget: widgetOptions } as WidgetOptionsT : widgetOptions 
 
   if (!WidgetMap[name].readonly) {
     // 如果没有设置 readonly widget, 使用默认的 readonly
@@ -28,7 +28,7 @@ export function registerWidgetExtends (superWidgetName: string, name: string, wi
   ))
 }
 
-function mergeObjects (ob1: any, ob2: any, atomKeys = []): any {
+function mergeObjects (ob1: any, ob2: any, atomKeys: string[] = []): any {
   const result = { root: null }
   const walk = (dst, src, base, key) => {
     if (atomKeys.includes(key)) {

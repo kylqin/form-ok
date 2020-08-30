@@ -1,5 +1,6 @@
-import { PlainObject, ValueParserT } from '/@/core/types'
-import { BaseWidget } from './widgets/base-widget-f'
+import { BaseWidget } from './base-widget'
+import { ValueParserT } from '/@/core/types'
+import { PlainObject } from '/@/core/utils'
 
 export type WidgetOptionsT = {
   widget: BaseWidget

@@ -1,8 +1,8 @@
 import { Input } from 'antd'
 import React from 'react'
-import { useListenValue } from '../../hooks'
-import { FieldPropsBaseT, getAttrs, getInputProps } from './base-widget-f'
-import { registerWidgets } from './register-widget'
+import { useListenValue } from '/@/react/hooks'
+import { FieldPropsBaseT, getAttrs, getInputProps } from '../base-widget'
+import { registerWidgets } from '../register-widget'
 
 export function InputWidget (props: FieldPropsBaseT) {
   const { value: initialValue, ...inputProps } = getInputProps(props)

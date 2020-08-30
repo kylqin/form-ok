@@ -1,3 +1,7 @@
+export type PlainObject = {
+  [prop: string]: any
+}
+
 /** 指通过字面量形式或者 new Object() 形式定义的对象 */
 export function isPlain (obj: any) {
   if (obj === null || typeof obj !== 'object') return false
